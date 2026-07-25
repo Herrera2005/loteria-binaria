@@ -1,0 +1,27 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+/generated/prisma
+
+# Secretos
+.env
+.env.*
+!.env.example
+
+# Dependencias y compilados
+node_modules/
+.next/
+dist/
+build/
+.expo/
+coverage/
+*.log
+
+# Datos locales
+backups/*
+.DS_Store
+Thumbs.db
+
+# Configuración local de asistentes
+.claude/
