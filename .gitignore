@@ -25,3 +25,7 @@ Thumbs.db
 
 # Configuración local de asistentes
 .claude/
+
+# Configuración local de asistentes
+.claude/
+.windsurf/
