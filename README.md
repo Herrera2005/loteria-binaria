@@ -9,6 +9,7 @@ Plataforma académica de sorteos digitales combinatorios con aplicaciones web y 
 
 - [Descripción](#descripción)
 - [Estado actual](#estado-actual)
+- [Baseline documental congelada](#baseline-documental-congelada)
 - [Fuentes normativas](#fuentes-normativas)
 - [Arquitectura](#arquitectura)
 - [Estructura del repositorio](#estructura-del-repositorio)
@@ -31,9 +32,30 @@ Plataforma académica de sorteos digitales combinatorios con aplicaciones web y 
 - **Decimal:** selección de 5 valores únicos dentro de `0–9`.
 - **Hexadecimal:** selección de 6 valores únicos dentro de `0–9` y `A–F`.
 
-El sistema objetivo administra usuarios con roles de Cliente, Vendedor y Administrador; wallets real y virtual; solicitudes de conversión; eventos; combinaciones únicas; reservas; boletos; resultados verificables; premios; fondos y auditoría.
+El sistema objetivo administra usuarios con roles globales de **Cliente, Vendedor y Administrador**; wallets real y virtual; solicitudes de conversión; eventos; combinaciones únicas; reservas; boletos; resultados verificables; premios; fondos y auditoría.
+
+Además, el mismo producto contempla un módulo separado de **sorteos creados por usuarios**. En ese módulo, cualquier cuenta registrada y activa puede actuar como **Organizador del sorteo que creó**. Organizador se trata como una capacidad contextual sobre un recurso, no como privilegio administrativo global.
+
+Los dos contextos no deben mezclarse:
+
+- **Lotería oficial:** productos Octal, Decimal y Hexadecimal, wallets REAL/VIRTUAL, fondos de garantía, premio creciente, acumulados, resultado verificable y boletos oficiales.
+- **Sorteos creados por usuarios:** rango de números propio, premios o productos definidos por el Organizador, participación con saldo VIRTUAL, comisión de plataforma del 5 %, códigos privados, historial, expulsiones y reclamos.
+
+Ambos módulos comparten autenticación, usuarios, libro contable, auditoría y API, pero no comparten automáticamente reglas de premios, estados, fondos ni método de selección del ganador.
 
 La web y la aplicación móvil deben consumir la misma API. Las reglas financieras, de autorización, tiempo, disponibilidad, resultados y premios pertenecen al backend y nunca deben depender del navegador o del dispositivo.
+
+### Reglas funcionales congeladas destacadas
+
+- Conversión VIRTUAL→REAL: comisión del 10 %; el retiro posterior no cobra una segunda comisión de negocio.
+- Compra mayorista del Vendedor: 0,90 REAL por cada 1,00 VIRTUAL.
+- Solicitud Cliente→Vendedor: REAL reservado y fallback automático a los cinco minutos.
+- Reserva de combinación oficial: hasta cinco minutos, sin superar el cierre de ventas.
+- Compra oficial: límite del 20 % durante el primer 80 % de la ventana.
+- Evento oficial publicado: inmutable; cancelación anterior al resultado con devolución total.
+- Sorteo de usuario: 5 % de comisión retenida y 95 % en escrow hasta entrega o resolución.
+- Resultados: únicos, inmutables, generados por servidor y verificables mediante hash.
+
 
 ## Estado actual
 
@@ -49,17 +71,37 @@ El repositorio se encuentra en una fase inicial de infraestructura y scaffolding
 
 La presencia de una pantalla, endpoint o estructura inicial no significa que la regla de negocio correspondiente ya esté implementada o validada.
 
+El módulo de sorteos creados por usuarios pertenece al alcance aprobado de Lotería Binaria como contexto independiente. `PEND-ORG-001` a `PEND-ORG-010` ya fueron resueltos o excluidos formalmente mediante `ADR-ORG-001`; no existen decisiones funcionales abiertas para comenzar el esquema Prisma y las migraciones v1.
+
+## Baseline documental congelada
+
+La versión 1 se implementa a partir de estos documentos aprobados:
+
+| Documento | Versión | Materia |
+| --- | ---: | --- |
+| `docs/REGLAS-NEGOCIO.md` | 1.4.0 | Reglas `LOT-*`, pruebas esperadas y decisiones finales. |
+| `docs/ESTADOS-Y-TRANSICIONES.md` | 1.1.0 | Máquinas de estado y transiciones válidas. |
+| `docs/FLUJOS-FINANCIEROS.md` | 1.1.0 | Cuentas, doble entrada, tasas y residuos. |
+| `docs/MATRIZ-DE-PERMISOS.md` | 1.1.0 | Rol, modo, recurso, guardas y denegaciones. |
+| `docs/DICCIONARIO-DE-DATOS.md` | 1.1.0 | Tablas, campos, FKs, restricciones e índices. |
+| `docs/PLAN-TECNICO.md` | 1.1.0 | Arquitectura, fases, seguridad, pruebas y despliegue. |
+| `docs/DECISIONES-ARQUITECTURA/ADR-ORG-001-RESOLUCION-SORTEOS-USUARIOS.md` | Aprobado | Resolución del contexto `user_draws`. |
+
+Estos documentos están congelados para la implementación v1. Prisma, SQL, API, web y mobile deben traducirlos, no reinterpretarlos. Las decisiones técnicas que no cambien la lógica —por ejemplo, proveedor S3 o particionado futuro— pueden documentarse mediante ADR.
+
 ## Fuentes normativas
 
-La implementación debe respetar esta jerarquía documental:
+La implementación debe respetar esta jerarquía:
 
-1. **Documento Maestro de Reglas del Sistema Lotería Binaria v1.0:** define qué debe hacer el sistema.
-2. **Plan Técnico de Creación de Lotería Binaria v1.0:** define cómo y en qué orden debe construirse.
-3. **ADR:** justifican decisiones técnicas específicas.
-4. **OpenAPI, esquema Prisma y migraciones:** contratos ejecutables.
-5. **Código y pruebas:** implementación verificable.
+1. Documento Maestro v1.0 y adendas aprobadas, incluido `ADR-ORG-001`.
+2. `docs/REGLAS-NEGOCIO.md` v1.4.0.
+3. Estados, flujos, permisos y diccionario de datos, cada uno dentro de su materia.
+4. `docs/PLAN-TECNICO.md` v1.1.0.
+5. OpenAPI, Prisma y migraciones.
+6. Código y pruebas.
+7. README como guía operativa.
 
-Cuando exista una contradicción, prevalece el documento de mayor autoridad. Las reglas de negocio no deben modificarse para simplificar el código; se corrige el diseño técnico.
+Cuando exista una contradicción no resuelta, se detiene el cambio y se documenta la decisión antes de modificar SQL o código. Las reglas de negocio no deben deformarse para simplificar la implementación.
 
 El frontend demostrativo anterior basado en HTML, CSS, JavaScript, JSON o `localStorage` solo puede usarse como referencia visual y de navegación. No es fuente de verdad financiera, de seguridad ni de datos.
 
@@ -92,7 +134,7 @@ flowchart TD
 | `apps/api` | NestJS | Autenticación, permisos, validaciones, reglas, transacciones y contratos HTTP. |
 | `apps/worker` | NestJS + BullMQ | Expiraciones, sorteos, acreditaciones, reconciliaciones y trabajos reintentables. |
 | `apps/web` | Next.js | Landing, autenticación y paneles web. |
-| `apps/mobile` | Expo + React Native | Aplicación Android/iOS para Cliente y Vendedor. |
+| `apps/mobile` | Expo + React Native | Aplicación Android/iOS. La primera entrega prioriza Cliente y Vendedor; las funciones de Organizador pueden incorporarse por fase sin cambiar la API ni las reglas congeladas. |
 | PostgreSQL | PostgreSQL 16 | Fuente de verdad relacional, histórica y contable. |
 | Redis | Redis 7 | Colas, caché, rate limiting, locks auxiliares y datos efímeros. |
 | Prisma | Prisma | Acceso tipado, validación del esquema y migraciones versionadas. |
@@ -111,6 +153,15 @@ loteria-binaria/
 │   └── mobile/              # Aplicación Expo/React Native
 ├── prisma/
 │   └── schema.prisma        # Esquema de base de datos
+├── docs/
+│   ├── REGLAS-NEGOCIO.md
+│   ├── ESTADOS-Y-TRANSICIONES.md
+│   ├── FLUJOS-FINANCIEROS.md
+│   ├── MATRIZ-DE-PERMISOS.md
+│   ├── DICCIONARIO-DE-DATOS.md
+│   ├── PLAN-TECNICO.md
+│   └── DECISIONES-ARQUITECTURA/
+│       └── ADR-ORG-001-RESOLUCION-SORTEOS-USUARIOS.md
 ├── scripts/
 │   └── doctor-local.sh      # Diagnóstico del entorno local
 ├── compose.yaml             # PostgreSQL y Redis
@@ -399,6 +450,8 @@ pnpm db:studio
 - Los cambios financieros deben incluir estrategia segura de avance y recuperación.
 - No crear modelos o migraciones basados en reglas antiguas del prototipo.
 - No ejecutar migraciones destructivas en producción sin respaldo y plan aprobado.
+- Toda migración debe citar las reglas `LOT-*`, máquinas, flujos y permisos afectados.
+- El `schema.prisma` final debe conservar las 101 tablas y relaciones aprobadas o justificar formalmente cualquier cambio de implementación equivalente.
 
 ## Inicio de las aplicaciones
 
@@ -503,6 +556,9 @@ pnpm test
 pnpm build
 ```
 
+> [!CAUTION]
+> En el estado actual del repositorio, los scripts `lint` de API y worker incluyen `--fix`, por lo que pueden modificar archivos. Antes de configurar CI debe añadirse una variante de verificación sin corrección automática, por ejemplo `lint:check`.
+
 ### API
 
 ```bash
@@ -534,11 +590,15 @@ En el scaffolding actual, API y worker tienen scripts Jest. Web y mobile todaví
 - Límite inicial del 20% y liberación al 80% de la ventana.
 - Doble clic e idempotencia.
 - Libro contable balanceado y saldos no negativos.
+- Política de mayores residuos de `LOT-FIN-013` y redondeo a cuartos.
 - Dos vendedores intentando tomar la misma solicitud.
 - Carrera entre vendedor y conversión automática al minuto cinco.
 - Resultado único, inmutable y verificable.
 - Premios, devoluciones y reembolsos sin doble acreditación.
-- Autorización por rol y modo activo.
+- Códigos privados de un solo uso y reclamación concurrente.
+- Expulsión sin pérdida del historial ni del derecho a reclamar.
+- Separación entre reglas de lotería oficial y sorteos creados por usuarios.
+- Autorización por rol, modo activo y propiedad contextual del Organizador.
 - Manipulación del reloj del dispositivo.
 - Recuperación después de reinicios o fallos temporales.
 
@@ -629,13 +689,16 @@ Los cambios de dinero, ledger, permisos, sorteos, resultados, fondos, migracione
 
 - `.env` y secretos.
 - `node_modules/`.
-- `.next/`, `dist/`, `build/` y `.expo/`.
+- `.next/`, `dist/`, `build/`, `.expo/` y `.turbo/`.
 - `coverage/`.
 - Logs y respaldos locales.
 - Credenciales, tokens o datos reales.
 - Copias `*.backup`.
 
 Las carpetas vacías que deban conservarse pueden incluir un archivo `.gitkeep`.
+
+> [!NOTE]
+> En la revisión del repositorio público del 26 de julio de 2026 todavía aparecen `package.json.backup` y el directorio `.turbo/`. Ambos contradicen estas convenciones y deben retirarse del control de versiones cuando se confirme que no contienen información necesaria.
 
 ## Reglas técnicas obligatorias
 
@@ -649,13 +712,17 @@ Estas reglas previenen errores estructurales durante el desarrollo:
 6. REAL y VIRTUAL son unidades distintas y no se mezclan sin una conversión explícita.
 7. Toda operación financiera o crítica debe ser transaccional, auditable e idempotente.
 8. La hora del servidor y la base de datos es la autoridad para cierres y expiraciones.
-9. Un evento publicado y un resultado fijado no se modifican silenciosamente.
+9. Un evento oficial publicado no se edita; solo puede cancelarse mediante el flujo autorizado antes de fijar el resultado. Un resultado fijado es inmutable.
 10. Las correcciones financieras se realizan con operaciones compensatorias, no editando el historial.
 11. Una combinación completa no puede venderse dos veces dentro del mismo evento.
 12. Un resultado, premio, reembolso o solicitud solo puede completarse una vez.
 13. Las reglas históricas pertenecen a versiones inmutables en base de datos, no a números mágicos dispersos.
 14. `localStorage`, JSON local, caché móvil o estado de React nunca son fuente de verdad.
 15. Ningún secreto real debe aparecer en código, commits, logs, capturas o documentación pública.
+16. Organizador no concede permisos globales: solo administra los sorteos de usuario que le pertenecen.
+17. Los sorteos creados por usuarios utilizan el saldo VIRTUAL del libro global, pero mantienen reglas, estados y contabilidad de dominio separadas de la lotería oficial.
+18. Los repartos 90/10, 95/5 y 50/25/15/10 usan la política de mayores residuos de `LOT-FIN-013`; las compras mayoristas aceptan incrementos de 1,00 VIRTUAL.
+19. No existen decisiones funcionales abiertas en la baseline v1; cualquier comportamiento adicional pertenece a una versión futura y no puede introducirse silenciosamente.
 
 ## Solución de problemas
 
@@ -726,4 +793,4 @@ pnpm db:validate
 
 **Autor académico:** Cristhian Herrera Nieto  
 **Proyecto:** Lotería Binaria  
-**Estado del README:** guía inicial oficial de desarrollo local; debe actualizarse junto con la arquitectura, las variables, los scripts y las migraciones.
+**Estado del README:** guía operativa oficial alineada con la baseline documental congelada v1; se actualiza únicamente cuando cambian comandos, infraestructura o una nueva versión documental aprobada.

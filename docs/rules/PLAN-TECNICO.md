@@ -2,17 +2,17 @@
 title: "Plan Técnico de Creación de Lotería Binaria"
 subtitle: "Base de datos, backend, web, aplicación móvil, seguridad, pruebas y despliegue"
 author: "Cristhian Herrera Nieto"
-date: "20 de julio de 2026"
-version: "1.0"
+date: "26 de julio de 2026"
+version: "1.1.0"
 ---
 
 # PLAN TÉCNICO DE CREACIÓN DE LOTERÍA BINARIA
 
-**Versión:** 1.0  
-**Estado:** Plan integral aprobado para ejecución por fases  
+**Versión:** 1.1.0  
+**Estado:** **APROBADO Y CONGELADO** como baseline técnica final de la versión 1  
 **Documento normativo asociado:** Documento Maestro de Reglas del Sistema Lotería Binaria v1.0  
 **Autor académico:** Cristhian Herrera Nieto  
-**Fecha:** 20 de julio de 2026
+**Fecha:** 26 de julio de 2026
 
 
 # CONTROL DEL DOCUMENTO
@@ -23,18 +23,39 @@ version: "1.0"
 | Campo | Definición |
 | --- | --- |
 | Nombre oficial | Plan Técnico de Creación por Fases del Sistema Lotería Binaria |
-| Versión | 1.0 |
-| Estado | Base técnica aprobada para diseño detallado, implementación y control del proyecto |
-| Documento funcional superior | Documento Maestro de Reglas del Sistema Lotería Binaria v1.0 |
-| Ámbito | Base de datos, backend/API, procesos asíncronos, plataforma web, aplicación móvil, seguridad, pruebas, infraestructura, despliegue y operación |
+| Versión | 1.1.0 |
+| Estado | Baseline técnica final aprobada y congelada para implementación v1 |
+| Documento funcional superior | Documento Maestro v1.0 + `REGLAS-NEGOCIO.md` v1.4.0 y `ADR-ORG-001` |
+| Ámbito | Lotería oficial, sorteos creados por usuarios, base de datos, backend/API, procesos asíncronos, web, móvil, seguridad, pruebas, infraestructura, despliegue y operación |
 | Referencia histórica | El frontend HTML/CSS/JavaScript/JSON existente se usa solo como referencia visual y de navegación |
 | Propietario académico | Cristhian Herrera Nieto |
 | Fecha de emisión | 20 de julio de 2026 |
 
-Este documento convierte las reglas funcionales y económicas de Lotería Binaria en un plan técnico ejecutable. No reemplaza el Documento Maestro de Reglas: lo complementa. Si existiera una contradicción, prevalece la versión vigente del Documento Maestro de Reglas y debe emitirse una actualización formal de este plan.
+Este documento convierte las reglas funcionales y económicas de Lotería Binaria en un plan técnico ejecutable. No reemplaza las reglas: las implementa técnicamente.
+
+La baseline documental final queda formada por:
+
+1. Documento Maestro v1.0 y `ADR-ORG-001`.
+2. `REGLAS-NEGOCIO.md` v1.4.0.
+3. `ESTADOS-Y-TRANSICIONES.md` v1.1.0.
+4. `FLUJOS-FINANCIEROS.md` v1.1.0.
+5. `MATRIZ-DE-PERMISOS.md` v1.1.0.
+6. `DICCIONARIO-DE-DATOS.md` v1.1.0.
+7. Este Plan Técnico v1.1.0.
+
+Los contratos especializados prevalecen dentro de su materia cuando detallan una decisión que el Plan v1.0 solo describía de forma general.
 
 > **Decisión obligatoria:** Ninguna fase de implementación puede alterar reglas de negocio para facilitar el código. Si una regla resulta difícil de implementar, se mejora el diseño técnico; no se deforma la regla.
 
+
+## Congelamiento de la versión 1
+
+- No existen decisiones funcionales o económicas abiertas para iniciar Prisma, migraciones y backend.
+- Los sorteos creados por usuarios forman parte del producto como contexto separado.
+- La verificación automática con cédula está excluida del MVP.
+- La política de minor units y residuos se rige por `LOT-FIN-013`.
+- Las decisiones de proveedor, retención, observabilidad o particionado pueden definirse sin cambiar la lógica congelada.
+- Cualquier ampliación funcional pertenece a una versión futura y requiere actualización documental previa.
 
 ## Objetivos del informe
 
@@ -298,7 +319,7 @@ loteria-binaria/
 ## 4.3 Estándares de código
 
 - ESLint, Prettier y TypeScript strict ejecutados en CI.
-- Nombres en inglés para código y base de datos; interfaz y documentación funcional en español.
+- Nombres en inglés para código, tablas y columnas. Los valores de estado pueden conservar el vocabulario normativo en español y `MAYUSCULAS_CON_GUION_BAJO` definido en `ESTADOS-Y-TRANSICIONES.md`.
 - No usar números mágicos: porcentajes, tiempos, estados y límites provienen de versiones o configuración.
 - Errores de dominio tipados, no textos dispersos.
 - Pruebas junto a los módulos o en carpetas claramente separadas.
@@ -364,98 +385,139 @@ Los parámetros de negocio no deben depender de variables de entorno cuando form
 
 ## 6.3 Dominios y tablas
 
+El catálogo físico final contiene **101 tablas**: 73 del Plan base v1.0 y 28 extensiones aprobadas para permisos granulares, proyecciones, trazabilidad y el contexto `user_draws`. El detalle de campos y restricciones pertenece a `DICCIONARIO-DE-DATOS.md` v1.1.0.
+
 | Dominio | Tabla | Responsabilidad |
 | --- | --- | --- |
-| Identidad | users | Cuenta principal, estado y credenciales de referencia. |
-| Identidad | user_profiles | Datos personales y contacto. |
-| Identidad | roles | Cliente, Vendedor, Administrador y permisos extensibles. |
-| Identidad | permissions | Acciones autorizables. |
-| Identidad | user_roles | Roles asignados y vigencia. |
-| Identidad | role_permissions | Permisos por rol. |
-| Identidad | sessions | Sesiones activas, modo y dispositivo. |
-| Identidad | refresh_tokens | Tokens rotables almacenados mediante hash. |
-| Identidad | devices | Dispositivos y metadatos de seguridad. |
-| Identidad | login_attempts | Intentos y bloqueos. |
-| Identidad | password_resets | Recuperación de contraseña. |
-| Identidad | verification_tokens | Verificación de correo/teléfono. |
-| Identidad | terms_versions | Versiones de términos y privacidad. |
-| Identidad | terms_acceptances | Aceptación trazable. |
-| Finanzas | wallets | Wallet por usuario y unidad REAL/VIRTUAL. |
-| Finanzas | ledger_accounts | Cuentas contables de usuarios, eventos y plataforma. |
-| Finanzas | ledger_transactions | Cabecera de operación financiera. |
-| Finanzas | ledger_entries | Débitos y créditos balanceados. |
-| Finanzas | wallet_balance_projections | Saldo materializado derivado del libro. |
-| Finanzas | idempotency_keys | Deduplicación de comandos y respuestas. |
-| Finanzas | real_topups | Recargas simuladas o confirmadas por proveedor. |
-| Finanzas | payment_provider_events | Webhooks y eventos externos deduplicados. |
-| Finanzas | virtual_to_real_conversions | Conversión con comisión del 10%. |
-| Finanzas | withdrawal_requests | Solicitud y estado de retiro real. |
-| Finanzas | virtual_transfers | Transferencias internas entre usuarios permitidos. |
-| Vendedores | vendor_profiles | Estado, métricas y configuración del vendedor. |
-| Vendedores | vendor_inventory_batches | Lotes virtuales adquiridos a costo 0,90. |
-| Vendedores | vendor_purchase_orders | Compra mayorista de saldo virtual. |
-| Vendedores | conversion_requests | Solicitud de Cliente para real→virtual. |
-| Vendedores | conversion_assignments | Asignación atómica a vendedor. |
-| Vendedores | conversion_request_events | Historial de estados y acciones. |
-| Vendedores | vendor_sales | Venta realizada y costo del inventario. |
-| Vendedores | related_account_flags | Vínculos y alertas antifraude. |
-| Lotería | lottery_products | Octal, Decimal y Hexadecimal. |
-| Lotería | rule_versions | Reglas inmutables por producto. |
-| Lotería | prize_rule_versions | Premio mayor, devolución y política económica. |
-| Lotería | event_templates | Autogenerador por producto. |
-| Lotería | template_schedules | Horarios, días, frecuencia y anticipación. |
-| Lotería | draw_events | Evento concreto de sorteo. |
-| Lotería | draw_event_status_history | Historial de estados. |
-| Lotería | event_financial_configs | Precio, premio inicial, techo, meta mínima y redondeo. |
-| Lotería | event_combinations | Catálogo único disponible/reservado/vendido. |
-| Lotería | combination_numbers | Valores normalizados cuando se requiera búsqueda relacional. |
-| Compra | purchase_sessions | Sesión de compra y caducidad. |
-| Compra | shopping_carts | Carrito activo. |
-| Compra | cart_items | Combinaciones añadidas. |
-| Compra | combination_reservations | Reserva de cinco minutos. |
-| Compra | purchase_orders | Orden de compra idempotente. |
+| Compra | cart_items | Reservas dentro del carrito. |
+| Compra | combination_reservations | Reserva exclusiva de hasta cinco minutos, limitada por el cierre. |
+| Compra | purchase_orders | Orden idempotente que confirma boletos. |
+| Compra | purchase_sessions | Sesión temporal de compra. |
+| Compra | shopping_carts | Carrito asociado a la sesión. |
+| Compra | ticket_numbers | Símbolos del boleto. |
+| Compra | ticket_status_history | Historial multidimensional de propiedad, evaluación y crédito. |
 | Compra | tickets | Boleto pagado e inmutable. |
-| Compra | ticket_numbers | Números/símbolos seleccionados. |
-| Compra | ticket_status_history | Historial del boleto. |
+| Finanzas | idempotency_keys | Deduplicación de comandos y respuesta persistida. |
+| Finanzas | ledger_accounts | Cuentas del subledger para usuarios, plataforma, eventos, fondos y escrow. |
+| Finanzas | ledger_entries | Débitos y créditos. |
+| Finanzas | ledger_transactions | Cabecera inmutable de operación financiera. |
+| Finanzas | payment_provider_events | Eventos externos deduplicados y sanitizados. |
+| Finanzas | real_topups | Recargas REAL simuladas o futuras. |
+| Finanzas | virtual_to_real_conversions | Conversión VIRTUAL→REAL con 10 %. |
+| Finanzas | virtual_transfers | Transferencias VIRTUAL entre clientes. |
+| Finanzas | wallet_balance_projections | Proyección reconstruible de saldo. |
+| Finanzas | wallets | Wallet por usuario y unidad; no guarda el saldo autoritativo. |
+| Finanzas | withdrawal_requests | Retiros REAL simulados. |
+| Fondos | accumulation_pools | Pool por producto. |
+| Fondos | accumulation_transfers | Asignación y retorno de acumulado. |
+| Fondos | fund_movements | Trazabilidad semántica de movimientos. |
+| Fondos | future_prize_fund | Fondo VIRTUAL para premios futuros. |
 | Fondos | guarantee_fund | Metadatos del fondo general. |
 | Fondos | guarantee_fund_reservations | Cobertura bloqueada por evento. |
-| Fondos | future_prize_fund | Fondo de premios futuros. |
-| Fondos | accumulation_pools | Acumulados pendientes por producto. |
-| Fondos | accumulation_transfers | Transferencia a evento receptor. |
-| Fondos | fund_movements | Motivo y relación con asientos contables. |
-| Resultado | draw_commitments | Commitment, semilla cifrada y versión. |
-| Resultado | draw_snapshots | Hash del conjunto congelado de boletos. |
-| Resultado | draw_results | Resultado inmutable y timestamps. |
-| Resultado | draw_result_numbers | Números ganadores y orden visual. |
-| Resultado | ticket_evaluations | Aciertos y categoría por boleto. |
-| Resultado | prize_awards | Premios y devoluciones calculados. |
-| Resultado | award_payment_orders | Acreditación idempotente al publicar informe. |
-| Resultado | result_reports | Informe, estado, hash y archivo. |
-| Sistema | outbox_events | Eventos de dominio pendientes de publicación. |
-| Sistema | inbox_events | Mensajes consumidos y deduplicados. |
-| Sistema | scheduled_jobs | Trabajos persistentes programados. |
-| Sistema | job_runs | Intentos, resultados y errores. |
-| Sistema | audit_events | Auditoría administrativa y de seguridad. |
-| Sistema | security_events | Alertas, patrones y bloqueos. |
-| Sistema | notifications | Mensajes opcionales al usuario. |
+| Identidad | devices | Dispositivos conocidos y metadatos de seguridad. |
+| Identidad | login_attempts | Intentos de autenticación y señales de abuso. |
+| Identidad | password_resets | Recuperación de contraseña de un uso. |
+| Identidad | permissions | Catálogo estable de acciones autorizables. |
+| Identidad | refresh_tokens | Tokens rotatorios almacenados mediante hash. |
+| Identidad | role_permissions | Permisos predeterminados por rol. |
+| Identidad | roles | Catálogo de roles globales. |
+| Identidad | sessions | Sesiones activas y modo. |
+| Identidad | terms_acceptances | Aceptación trazable de una versión. |
+| Identidad | terms_versions | Versiones inmutables de términos y privacidad. |
+| Identidad | user_permission_grants | Concesiones granulares directas para administradores. |
+| Identidad | user_profiles | Datos personales y contacto separados de credenciales. |
+| Identidad | user_roles | Roles asignados con vigencia y revocación. |
+| Identidad | users | Cuenta principal, credenciales de referencia y estado. |
+| Identidad | verification_tokens | Verificación de correo/teléfono. |
+| Lotería | combination_numbers | Símbolos de la combinación para búsqueda parcial. |
+| Lotería | draw_event_status_history | Historial append-only del evento. |
+| Lotería | draw_events | Evento oficial concreto. |
+| Lotería | event_combinations | Catálogo único de combinaciones. |
+| Lotería | event_financial_configs | Configuración económica congelada por evento. |
+| Lotería | event_financial_projections | Proyección reconstruible de ventas y premio. |
+| Lotería | event_templates | Autogeneradores de eventos. |
+| Lotería | lottery_products | Productos Octal, Decimal y Hexadecimal. |
+| Lotería | prize_rule_versions | Reglas económicas inmutables. |
+| Lotería | rule_versions | Reglas matemáticas históricas por producto. |
+| Lotería | template_schedules | Horarios, días y recurrencias. |
+| Resultado | award_payment_orders | Orden idempotente de acreditación. |
+| Resultado | draw_commitments | Commitment y semilla cifrada. |
+| Resultado | draw_result_numbers | Símbolos ganadores y orden visual. |
+| Resultado | draw_results | Resultado único e inmutable. |
+| Resultado | draw_snapshot_tickets | Contenido relacional del snapshot. |
+| Resultado | draw_snapshots | Snapshot de boletos elegibles. |
+| Resultado | prize_awards | Obligación calculada por boleto y categoría. |
+| Resultado | result_reports | Boletín público estructurado. |
+| Resultado | ticket_evaluations | Evaluación inmutable por boleto. |
+| Sistema | audit_events | Auditoría administrativa, financiera y de seguridad. |
+| Sistema | inbox_events | Deduplicación de mensajes consumidos. |
+| Sistema | job_runs | Intentos de ejecución. |
+| Sistema | notification_preferences | Preferencias por usuario, tipo y canal. |
+| Sistema | notifications | Avisos opcionales. |
+| Sistema | outbox_events | Eventos de dominio posteriores al commit. |
+| Sistema | scheduled_jobs | Trabajos persistentes. |
+| Sistema | security_events | Alertas y patrones de riesgo. |
+| Sistema | stored_objects | Metadatos de archivos S3 compatibles. |
 | Sistema | system_settings | Configuración operativa no histórica. |
-
+| Sorteos de usuarios | user_draw_access_code_events | Historial de uso, pago y reserva del código. |
+| Sorteos de usuarios | user_draw_access_code_numbers | Números reservados por un código. |
+| Sorteos de usuarios | user_draw_access_codes | Código privado de un uso. |
+| Sorteos de usuarios | user_draw_announcements | Anuncios internos. |
+| Sorteos de usuarios | user_draw_claim_events | Historial del reclamo. |
+| Sorteos de usuarios | user_draw_claim_evidence | Evidencia de reclamo. |
+| Sorteos de usuarios | user_draw_claims | Reclamo administrativo. |
+| Sorteos de usuarios | user_draw_delivery_records | Evidencia y confirmación de entrega. |
+| Sorteos de usuarios | user_draw_escrow_events | Historial del escrow. |
+| Sorteos de usuarios | user_draw_escrows | Control del 95 % y comisión 5 % retenida. |
+| Sorteos de usuarios | user_draw_invitations | Invitaciones privadas alternativas al código. |
+| Sorteos de usuarios | user_draw_number_changes | Cambio atómico de número. |
+| Sorteos de usuarios | user_draw_numbers | Números del rango y asignación. |
+| Sorteos de usuarios | user_draw_participation_events | Historial de pago, relación, elegibilidad y número. |
+| Sorteos de usuarios | user_draw_participations | Participación con estados separados. |
+| Sorteos de usuarios | user_draw_participation_numbers | Asignaciones de uno o varios números a una participación económica. |
+| Sorteos de usuarios | user_draw_prize_evidence | Evidencia de existencia/disponibilidad del premio. |
+| Sorteos de usuarios | user_draw_results | Ganador único generado por CSPRNG. |
+| Sorteos de usuarios | user_draw_snapshot_entries | Contenido del snapshot. |
+| Sorteos de usuarios | user_draw_snapshots | Snapshot de participaciones PAGADO+ACTIVA. |
+| Sorteos de usuarios | user_draw_status_history | Historial del sorteo de usuario. |
+| Sorteos de usuarios | user_draws | Sorteo creado por un Organizador contextual. |
+| Vendedores | conversion_assignments | Asignación atómica a Vendedor. |
+| Vendedores | conversion_request_events | Historial de estados de solicitud. |
+| Vendedores | conversion_requests | Solicitud REAL→VIRTUAL con reserva y fallback. |
+| Vendedores | related_account_flags | Vínculos y alertas antifraude. |
+| Vendedores | vendor_inventory_batches | Lotes VIRTUAL con coste histórico. |
+| Vendedores | vendor_profiles | Estado y habilitación del Vendedor. |
+| Vendedores | vendor_purchase_orders | Compra mayorista 0,90 REAL→1,00 VIRTUAL. |
+| Vendedores | vendor_sale_batch_allocations | Consumo de lotes para coste y ganancia realizada. |
+| Vendedores | vendor_sales | Venta realizada y ganancia verificable. |
 
 ## 6.4 Restricciones críticas
 
 | Restricción | Clave/condición | Objetivo |
 | --- | --- | --- |
-| uq_event_combination | draw_event_id + normalized_key | Impide vender o crear dos veces la misma combinación. |
-| uq_ticket_event_combination | draw_event_id + normalized_key | Defensa adicional en boletos pagados. |
-| uq_prize_payment | draw_event_id + ticket_id + award_category | Impide premio duplicado. |
-| uq_conversion_completion | conversion_request_id | Solo un vendedor o la plataforma completa la solicitud. |
-| uq_result_event | draw_event_id | Un único resultado fijado por evento. |
-| uq_template_slot | template_id + scheduled_at | Evita autogenerar el mismo evento dos veces. |
-| ledger_balanced | Suma de débitos = suma de créditos por transacción y unidad | Evita creación o desaparición contable. |
-| ticket_rule_match | ticket.rule_version_id = event.rule_version_id | Evita boleto ligado a reglas incorrectas. |
-| valid_reservation | expires_at > created_at y estado permitido | Reserva temporal coherente. |
-| nonnegative_projection | Saldos disponibles no negativos salvo cuentas autorizadas | Evita sobregiro accidental. |
+| `uq_event_combination` | `draw_event_id + normalized_key` | Impide duplicar una combinación oficial. |
+| `uq_ticket_event_combination` | `draw_event_id + normalized_key` | Defensa adicional en boletos pagados. |
+| `uq_active_combination_reservation` | Índice parcial por `combination_id` cuando `status='ACTIVA'` | Una reserva activa por combinación. |
+| `uq_active_conversion_assignment` | Índice parcial por solicitud cuando `status='ACTIVA'` | Un Vendedor asignado a la vez. |
+| `uq_conversion_completion` | Finalización terminal única por solicitud | Solo Vendedor o plataforma completa. |
+| `uq_result_event` | `draw_event_id` | Un resultado oficial. |
+| `uq_user_draw_number_active_occupancy` | Bloqueo de `user_draw_numbers` + asignación/código activo | Impide reservar y asignar simultáneamente el mismo número. |
+| `uq_user_draw_result` | `user_draw_id` | Un resultado de sorteo de usuario. |
+| `uq_prize_payment` | `draw_event_id + ticket_id + award_category` | Impide premio o devolución duplicados. |
+| `uq_user_draw_number` | `user_draw_id + number_value` | Impide duplicar números del rango. |
+| `uq_access_code_claim` | Código de un uso y lock de fila | Una cuenta reclamante. |
+| `uq_report_version` | `draw_event_id + report_version` | Versionado de informe sin sobrescritura. |
+| `idempotency_unique` | `UNIQUE NULLS NOT DISTINCT(subject_user_id,scope,key_value)` | Deduplica usuarios y jobs `SYSTEM`. |
+| `ledger_balanced` | Débitos = créditos por transacción y unidad | Conservación exacta de REAL/VIRTUAL. |
+| `ticket_rule_match` | `ticket.rule_version_id = event.rule_version_id` | Reglas históricas correctas. |
+| `contextual_fk_match` | FKs compuestas usuario/evento/sorteo | Impide que columnas redundantes apunten a contextos distintos. |
+| `combination_state_consistency` | Reserva activa/boleto confirmado ↔ estado de combinación | Evita disponibilidad contradictoria. |
+| `valid_reservation` | `expires_at > created_at` y no posterior al cierre | Reserva coherente. |
+| `nonnegative_projection` | Disponible no negativo salvo cuenta técnica | Evita sobregiro. |
+| `wholesale_increment` | `requested_virtual_minor % 100 = 0` | Conserva 0,90→1,00 exacto. |
+| `immutable_history` | Triggers/permisos sobre ledger, tickets, snapshots, resultados e informes | Impide reescritura destructiva. |
 
+> Prisma no expresa todas estas garantías. Índices parciales, balance diferido, `citext`, inmutabilidad y checks cruzados se implementan mediante SQL versionado dentro de las migraciones.
 
 ## 6.5 Índices recomendados
 
@@ -493,36 +555,53 @@ Balance                                      0
 ```
 
 
-## 7.2 Cuentas mínimas de plataforma
+## 7.2 Cuentas lógicas mínimas
+
+Las cuentas reales se identifican mediante `ledger_accounts.account_code`, unidad y propietario/recurso. Los nombres siguientes son plantillas lógicas:
 
 | Cuenta | Unidad | Uso |
 | --- | --- | --- |
-| PLATFORM_REAL_CASH | REAL | Real recibido por recargas y conversiones automáticas. |
-| PLATFORM_VIRTUAL_ISSUANCE | VIRTUAL | Emisión y control del virtual. |
-| GENERAL_CONVERSION_WALLET | VIRTUAL | Respaldo de solicitudes no atendidas en cinco minutos. |
-| CONVERSION_FEES | VIRTUAL/REAL | Comisión del 10% registrada sin mezclar unidades. |
-| GUARANTEE_FUND | VIRTUAL | Cobertura general y reservas por evento. |
-| FUTURE_PRIZE_FUND | VIRTUAL | 15% destinado a premios futuros. |
-| ACCUMULATION_POOL_OCTAL | VIRTUAL | Acumulados pendientes Octales. |
-| ACCUMULATION_POOL_DECIMAL | VIRTUAL | Acumulados pendientes Decimales. |
-| ACCUMULATION_POOL_HEX | VIRTUAL | Acumulados pendientes Hexadecimales. |
-| PLATFORM_OPERATIONS | VIRTUAL/REAL | Margen y costos operativos por unidad. |
-| ROUNDING_ADJUSTMENTS | VIRTUAL | Diferencias de redondeo. |
-
+| `USER_REAL_AVAILABLE` | REAL | Disponible del usuario. |
+| `USER_REAL_RESERVED_CONVERSION` | REAL | Reserva para solicitud Cliente→Vendedor. |
+| `USER_REAL_IN_WITHDRAWAL` | REAL | Monto en retiro. |
+| `USER_VIRTUAL_AVAILABLE` | VIRTUAL | Wallet global del usuario, con propietario contextual. |
+| `PLATFORM_REAL_CASH` | REAL | REAL controlado por plataforma. |
+| `SIMULATED_TOPUP_SOURCE_REAL` | REAL | Fuente académica de recargas. |
+| `SIMULATED_PAYOUT_CLEARING_REAL` | REAL | Clearing académico de retiros. |
+| `PLATFORM_VIRTUAL_ISSUANCE` | VIRTUAL | Emisión técnica. |
+| `PLATFORM_VIRTUAL_REDEMPTION` | VIRTUAL | Principal VIRTUAL retirado. |
+| `GENERAL_CONVERSION_WALLET` | VIRTUAL | Respaldo a los cinco minutos. |
+| `CONVERSION_FEES_VIRTUAL` | VIRTUAL | Comisión de conversión. |
+| `PLATFORM_OPERATIONS_VIRTUAL` | VIRTUAL | Operación/margen VIRTUAL. |
+| `ROUNDING_ADJUSTMENTS_VIRTUAL` | VIRTUAL | Ajustes simétricos del redondeo público. |
+| `DRAW_SALES_FUND` | VIRTUAL | Ventas del evento. |
+| `DRAW_PRIZE_RESERVE` | VIRTUAL | Premio y crecimiento. |
+| `AWARD_PAYABLE` | VIRTUAL | Obligaciones preparadas. |
+| `GUARANTEE_FUND_AVAILABLE` | VIRTUAL | Garantía disponible. |
+| `GUARANTEE_FUND_RESERVED_EVENT` | VIRTUAL | Cobertura por evento. |
+| `FUTURE_PRIZE_FUND` | VIRTUAL | Premios futuros. |
+| `ACCUMULATION_POOL_{PRODUCT}` | VIRTUAL | Pool por producto. |
+| `USER_DRAW_ESCROW` | VIRTUAL | 95 % retenido por sorteo de usuario. |
+| `USER_DRAW_COMMISSION_HELD` | VIRTUAL | 5 % retenido hasta devengo o reverso. |
 
 ## 7.3 Operaciones contables obligatorias
 
 | Operación | Flujo | Regla |
 | --- | --- | --- |
-| Recarga real | Proveedor/entrada → wallet REAL del usuario | Sin comisión de negocio. |
-| Compra mayorista vendedor | REAL vendedor → plataforma; emisión VIRTUAL → vendedor | Costo 0,90 por 1,00. |
-| Solicitud por vendedor | REAL reservado Cliente → Vendedor; VIRTUAL Vendedor → Cliente | Ganancia realizada 0,10. |
-| Solicitud por plataforma | REAL reservado Cliente → plataforma; VIRTUAL general → Cliente | Se completa a los cinco minutos. |
-| Virtual a real | VIRTUAL usuario → plataforma; REAL plataforma → usuario | 10% de comisión. |
-| Compra de boleto | VIRTUAL Cliente → fondo del evento | Boleto y combinación se confirman en la misma operación. |
-| Premio/devolución | Obligación del evento/fondo → VIRTUAL Cliente | Al publicar informe. |
-| Cancelación | Fondo del evento → wallets VIRTUAL de compradores | Reembolso íntegro. |
-| Acumulado | Premio no entregado → pool del producto → evento receptor | Solo si se cumple meta mínima. |
+| Fondeo de liquidez de plataforma | Fuente autorizada → caja REAL / wallet general VIRTUAL | Solo seed no productivo o Administrador con permiso reforzado; ledger obligatorio. |
+| Recarga REAL | Fuente simulada/proveedor → wallet REAL | Sin comisión de negocio. |
+| Compra mayorista | REAL usuario Vendedor → plataforma; emisión VIRTUAL → usuario | 0,90 por 1,00, en incrementos de 1,00 VIRTUAL. |
+| Solicitud por Vendedor | REAL reservado Cliente → Vendedor; VIRTUAL Vendedor → Cliente | Finalización única. |
+| Solicitud por plataforma | REAL reservado Cliente → plataforma; VIRTUAL general → Cliente | Fallback a los cinco minutos. |
+| VIRTUAL→REAL | Principal VIRTUAL + comisión; REAL plataforma → usuario | 10 % con `LOT-FIN-013`. |
+| Compra de boleto | VIRTUAL Cliente → fondo de ventas | Boleto, reserva y combinación en una transacción. |
+| Premio/devolución | Reservas/fondos → `AWARD_PAYABLE` → wallet VIRTUAL | Acreditación idempotente. |
+| Cancelación oficial | Fuentes autorizadas → payable → compradores | Reembolso íntegro. |
+| Acumulado | Premio no entregado → pool → evento receptor | Política 50/25/15/10. |
+| Participación de usuario | Wallet VIRTUAL → 95 % escrow + 5 % comisión retenida | Mayores residuos. |
+| Reembolso de usuario | Escrow + comisión retenida mientras no se liquide; después de liquidación, compensación separada desde plataforma | 100 % cuando corresponde; nunca se reabre ni sobregira un escrow `LIBERADA`. |
+| Liquidación de usuario | 95 % escrow → Organizador; comisión retenida → plataforma | Tras entrega o resolución. |
+| Redondeo público | Cuenta exacta ± `ROUNDING_ADJUSTMENTS_VIRTUAL` → payable | Regla de cuartos. |
 
 
 ## 7.4 Proyección de saldo
@@ -547,7 +626,7 @@ saldo_disponible = saldo_total - Σ(reservas_eventos_activos)
 - Administradores autorizados pueden aportar fondos con motivo y auditoría.
 - Se suspende la publicación automática de eventos sin cobertura.
 - Eventos futuros sin ventas se cancelan o no se publican; se regeneran cuando se restablece cobertura.
-- Las ventas de cada evento recuperan primero el adelanto de garantía antes de incrementar el premio.
+- Las ventas de cada evento proyectan primero la recuperación del adelanto de garantía antes de incrementar el premio. Mientras el evento sea cancelable, el bruto permanece en `DRAW_SALES_FUND`; los traspasos contables definitivos se ejecutan después de `RESULTADO_FIJADO`.
 
 
 # 8. ARQUITECTURA DEL BACKEND Y API
@@ -564,7 +643,7 @@ saldo_disponible = saldo_total - Σ(reservas_eventos_activos)
 | ledger | Transacciones, asientos, reconciliación e idempotencia. |
 | topups | Recargas reales simuladas o externas. |
 | conversions | Virtual→real, comisión y retiros. |
-| transfers | Transferencia virtual entre usuarios permitidos. |
+| transfers | Transferencia VIRTUAL exclusivamente entre Clientes activos; prohíbe autoenvío. |
 | vendors | Perfil, inventario, compra mayorista, métricas y ganancias. |
 | conversion-requests | Solicitudes, asignación, confirmación y fallback a cinco minutos. |
 | lottery-products | Productos y versiones de reglas. |
@@ -572,7 +651,7 @@ saldo_disponible = saldo_total - Σ(reservas_eventos_activos)
 | draw-events | Estados, ventas, cancelaciones y publicación. |
 | combinations | Catálogo, normalización, búsquedas parciales y disponibilidad. |
 | purchase-sessions | Sesiones, carritos y temporizadores. |
-| reservations | Reserva de cinco minutos y liberación. |
+| reservations | Reserva de hasta cinco minutos, acotada por el cierre, y liberación. |
 | tickets | Compra, comprobantes, filtros e historial. |
 | prize-engine | Premio inicial, crecimiento, techo, devolución y meta mínima. |
 | funds | Garantía, acumulados, premios futuros y operaciones. |
@@ -583,6 +662,13 @@ saldo_disponible = saldo_total - Σ(reservas_eventos_activos)
 | audit | Auditoría administrativa y técnica. |
 | risk | Rate limit, cuentas relacionadas y alertas. |
 | health | Estado de base, Redis, workers y storage. |
+| user-draws | Creación, publicación, rangos, visibilidad y anuncios. |
+| user-draw-participations | Compra, cambio de número, abandono y expulsión. |
+| user-draw-access | Códigos privados, invitaciones, reclamación y expiración. |
+| user-draw-results | Snapshot, CSPRNG, hashes de integridad y resultado único; sin heredar commit-reveal oficial. |
+| user-draw-delivery | Evidencia, confirmación y estado de entrega. |
+| user-draw-claims | Reclamos, evidencia, apelación y resolución. |
+| user-draw-escrow | Retención, disputa, liberación, comisión y reembolso. |
 
 
 ## 8.2 Contratos y validación
@@ -657,7 +743,7 @@ Los comandos financieros y críticos aceptan una clave de idempotencia. La API g
 | event-template-expand | Genera eventos futuros sin duplicados. |
 | event-open-sales | Abre ventas en la fecha oficial. |
 | purchase-session-expire | Cierra sesiones caducadas. |
-| reservation-expire | Libera combinaciones tras cinco minutos. |
+| reservation-expire | Libera combinaciones al vencer `MIN(reserved_at + 5 min, sales_close_at)`. |
 | conversion-request-expire-or-fallback | Completa con plataforma al cumplirse cinco minutos. |
 | event-close-sales | Cierra diez minutos antes del sorteo. |
 | event-freeze | Resuelve reservas y crea snapshot de boletos. |
@@ -671,6 +757,12 @@ Los comandos financieros y críticos aceptan una clave de idempotencia. La API g
 | fund-reconcile | Comprueba mínimo y reservas. |
 | report-render | Genera PDF/imagen/JSON del boletín. |
 | notification-dispatch | Envía avisos opcionales. |
+| user-draw-open-close | Abre/cierra ventas del sorteo de usuario. |
+| user-draw-code-expire | Expira códigos, libera números y reembolsa códigos pagados no reclamados. |
+| user-draw-freeze | Congela participaciones elegibles y publica hash. |
+| user-draw-result-generate | Fija ganador único mediante CSPRNG. |
+| user-draw-refund | Ejecuta cancelaciones, expulsiones y compensaciones. |
+| user-draw-escrow-settle | Libera o reembolsa escrow según entrega/reclamo. |
 
 
 ## 9.2 Reglas de ejecución
@@ -764,7 +856,7 @@ instante_liberación = redondear_a_00_o_30(instante_base)
 | 30 minutos o menos al cierre | 5 minutos | Visible. |
 | Regla superior | Nunca supera el tiempo restante al cierre | El backend rechaza fuera de hora. |
 
-> **Decisión obligatoria:** La reserva de cada combinación dura exactamente cinco minutos desde que se añade al carrito, independientemente de que la sesión sea más larga.
+> **Decisión obligatoria:** La reserva dura hasta cinco minutos desde que se añade al carrito y nunca supera `sales_close_at`; la sesión puede durar más, pero no prolonga la reserva ni las ventas.
 
 
 ## 10.7 Flujo transaccional
@@ -1010,7 +1102,7 @@ El informe se genera en JSON como fuente estructurada y puede renderizarse a HTM
 - La navegación principal del Cliente debe priorizar Inicio, Jugar, Boletos, Wallet y Perfil.
 - Mostrar hora oficial y cierre en cada evento.
 - Mostrar límite actual, compras del usuario y hora de liberación.
-- Mostrar reservas con contador de cinco minutos.
+- Mostrar el contador restante calculado por servidor, con máximo cinco minutos y límite en el cierre.
 - No usar notificaciones como único mecanismo de estado; toda información debe estar disponible dentro de la app.
 - Mensajes de error específicos con acciones de recuperación.
 - Teclado, lector de pantalla, contraste y tamaños táctiles adecuados.
@@ -1276,7 +1368,7 @@ Las fases están ordenadas por dependencia. No debe iniciarse una interfaz compl
 
 ### Actividades
 
-- Congelar Documento Maestro de Reglas v1.0 y este Plan Técnico v1.0.
+- Congelar Documento Maestro v1.0, reglas v1.4.0 y este Plan Técnico v1.1.0.
 - Crear glosario de datos, estados, permisos y códigos de error.
 - Documentar decisiones de arquitectura (ADR) para stack, monorepo, dinero, ledger, idempotencia y commit-reveal.
 - Diseñar diagramas C4: contexto, contenedores y componentes.
@@ -1504,8 +1596,8 @@ Las fases están ordenadas por dependencia. No debe iniciarse una interfaz compl
 - Implementar normalización e índices.
 - Implementar búsqueda parcial paginada.
 - Implementar aleatoria completa y completar al azar.
-- Implementar límite 20% y liberación al 80% redondeado.
-- Implementar sesiones dinámicas y reserva de cinco minutos.
+- Implementar límite 20 % y liberación al 80 % redondeado, acotada entre apertura y cierre sin extender ventas.
+- Implementar sesiones dinámicas y reserva de hasta cinco minutos, acotada por el cierre.
 - Implementar carrito de múltiples boletos.
 - Implementar compra transaccional y comprobante.
 - Implementar filtros y estados de boletos.
@@ -1810,7 +1902,7 @@ Para una materia, el MVP debe demostrar todo el ciclo principal sin fingir segur
 - No puede venderse una combinación repetida dentro de un evento.
 - La selección manual, parcial, aleatoria y rápida funciona.
 - El límite 20% y su liberación temporal se cumplen con hora del servidor.
-- La reserva dura cinco minutos y se libera de forma segura.
+- La reserva dura hasta cinco minutos, se acota por el cierre y se libera/invalida de forma segura.
 - Las ventas cierran diez minutos antes del sorteo.
 - El premio inicial, crecimiento, techo, devolución, redondeo y fondos coinciden con las fórmulas.
 - Los eventos sin ganador aplican la política correcta según meta mínima.
@@ -1848,11 +1940,13 @@ Para una materia, el MVP debe demostrar todo el ciclo principal sin fingir segur
 
 | Orden | Documento | Autoridad |
 | --- | --- | --- |
-| 1 | Documento Maestro de Reglas | Define qué debe hacer el sistema. |
-| 2 | Plan Técnico de Creación | Define cómo y en qué orden construirlo. |
-| 3 | ADR | Justifica decisiones técnicas específicas. |
-| 4 | OpenAPI y esquema de datos | Contratos ejecutables. |
-| 5 | Código y pruebas | Implementación verificable. |
+| 1 | Documento Maestro v1.0 + adendas/ADR aprobadas | Fuente funcional original y ampliaciones de alcance. |
+| 2 | `REGLAS-NEGOCIO.md` v1.4.0 | Catálogo normativo consolidado. |
+| 3 | Estados, flujos, permisos y diccionario de datos | Contratos especializados aprobados dentro de su materia. |
+| 4 | `PLAN-TECNICO.md` v1.1.0 | Arquitectura, fases y controles de construcción. |
+| 5 | OpenAPI, Prisma y migraciones | Contratos ejecutables. |
+| 6 | Código y pruebas | Implementación verificable. |
+| 7 | README | Guía operativa, no fuente de negocio. |
 
 
 ## 23.2 Procedimiento de cambio
@@ -1868,10 +1962,10 @@ Para una materia, el MVP debe demostrar todo el ciclo principal sin fingir segur
 
 ## 23.3 Regla para futuras conversaciones o herramientas
 
-> **Decisión obligatoria:** Antes de generar código, entregar el Documento Maestro de Reglas y este Plan Técnico como contexto. Cualquier propuesta que contradiga estos documentos debe señalarse como cambio, no incorporarse silenciosamente.
+> **Decisión obligatoria:** Antes de generar código, usar toda la baseline documental congelada. Una propuesta que la contradiga se rechaza para la versión 1 o se tramita como versión futura; nunca se incorpora silenciosamente.
 
 
-# ANEXO A. CATÁLOGO DE ENDPOINTS PROPUESTO
+# ANEXO A. CATÁLOGO BASE DE ENDPOINTS
 
 | Método | Ruta | Función |
 | --- | --- | --- |
@@ -1885,7 +1979,7 @@ Para una materia, el MVP debe demostrar todo el ciclo principal sin fingir segur
 | GET | /api/v1/wallets/movements | Movimientos paginados. |
 | POST | /api/v1/topups | Crear recarga real. |
 | POST | /api/v1/conversions/virtual-to-real | Convertir con 10%. |
-| POST | /api/v1/transfers/virtual | Transferir virtual. |
+| POST | /api/v1/transfers/virtual | Transferir VIRTUAL entre Clientes activos. |
 | POST | /api/v1/withdrawals | Solicitar retiro. |
 | POST | /api/v1/conversion-requests | Crear solicitud real→virtual. |
 | GET | /api/v1/conversion-requests/me | Estado del Cliente. |
@@ -1925,6 +2019,31 @@ Para una materia, el MVP debe demostrar todo el ciclo principal sin fingir segur
 | GET | /api/v1/admin/jobs | Trabajos y fallos. |
 | GET | /api/v1/health | Salud pública mínima. |
 
+
+## A.1 Endpoints de sorteos creados por usuarios
+
+| Método | Ruta | Uso |
+| --- | --- | --- |
+| POST | `/api/v1/user-draws` | Crear sorteo en borrador. |
+| PATCH | `/api/v1/user-draws/{id}` | Editar campos permitidos antes del primer pago. |
+| POST | `/api/v1/user-draws/{id}/publish` | Publicar con evidencia. |
+| POST | `/api/v1/user-draws/{id}/cancel` | Cancelar antes del resultado. |
+| POST | `/api/v1/user-draws/{id}/range/expand` | Ampliar rango antes del cierre. |
+| POST | `/api/v1/user-draws/{id}/participations` | Comprar participación. |
+| POST | `/api/v1/user-draw-participations/{id}/change-number` | Cambiar número. |
+| POST | `/api/v1/user-draw-participations/{id}/abandon` | Abandonar antes del cierre. |
+| POST | `/api/v1/user-draw-participations/{id}/expel` | Expulsar con motivo. |
+| POST | `/api/v1/user-draws/{id}/access-codes` | Emitir código privado. |
+| POST | `/api/v1/user-draw-access-codes/claim` | Reclamar código. |
+| POST | `/api/v1/user-draws/{id}/announcements` | Publicar anuncio. |
+| POST | `/api/v1/user-draws/{id}/delivery` | Registrar evidencia de entrega. |
+| POST | `/api/v1/user-draws/{id}/delivery/confirm` | Confirmar recepción. |
+| POST | `/api/v1/user-draws/{id}/claims` | Presentar reclamo. |
+| POST | `/api/v1/admin/user-draw-claims/{id}/resolve` | Resolver reclamo. |
+| POST | `/api/v1/admin/user-draw-escrows/{id}/settle` | Autorizar liquidación/reembolso. |
+| POST | `/api/v1/admin/platform-liquidity/fund` | Fondear liquidez técnica con permiso reforzado y auditoría. |
+
+Todos requieren las claves de `MATRIZ-DE-PERMISOS.md`; la existencia de la ruta no concede autorización.
 
 # ANEXO B. EVENTOS DE DOMINIO Y MENSAJES
 
@@ -1998,6 +2117,20 @@ CALCULADO → PREPARADO → ACREDITANDO → ACREDITADO
                                   -> REVISIÓN_MANUAL
 ```
 
+
+## C.5 Sorteos creados por usuarios
+
+Las máquinas completas están en `ESTADOS-Y-TRANSICIONES.md`:
+
+```text
+BORRADOR → PUBLICADO → VENTAS_ABIERTAS → VENTAS_CERRADAS
+→ CONGELADO → RESULTADO_FIJADO → ENTREGA_PENDIENTE
+→ FINALIZADO | CERRADO_POR_INCUMPLIMIENTO
+
+Cancelación ordinaria: solo antes de RESULTADO_FIJADO.
+Participación: pago, relación y elegibilidad son dimensiones separadas.
+Escrow: RETENIDA → LIBERABLE/EN_DISPUTA → LIBERADA/REEMBOLSADA.
+```
 
 # ANEXO D. VARIABLES Y PARÁMETROS
 
@@ -2089,19 +2222,22 @@ else:
 
 # ANEXO F. LISTA DE VERIFICACIÓN ANTES DE COMENZAR CÓDIGO
 
-- Documento Maestro y Plan Técnico guardados en docs/.
-- Alcance de primera entrega aprobado.
-- Stack y monorepo aprobados.
-- Diagrama ER preliminar revisado.
-- Matriz de permisos aprobada.
-- Estados y transiciones aprobados.
-- Fórmulas económicas convertidas en casos de prueba.
-- Cuentas contables y fondos definidos.
-- Política de idempotencia definida.
-- Protocolo commit-reveal revisado.
-- Entornos y secretos planificados.
-- Backlog de Fase 1 creado.
-- Criterios de salida de la fase entendidos.
+- [x] Documento Maestro, ADR y Plan Técnico guardados en `docs/`.
+- [x] Alcance de la versión 1 aprobado y congelado.
+- [x] Stack y monorepo aprobados.
+- [x] Reglas `LOT-*` aprobadas.
+- [x] Estados y transiciones aprobados.
+- [x] Flujos financieros y doble entrada aprobados.
+- [x] Matriz de permisos aprobada.
+- [x] Diccionario de datos y catálogo de 101 tablas aprobados.
+- [x] Fórmulas económicas convertidas en casos de prueba obligatorios.
+- [x] Cuentas contables, fondos, escrow y política de residuos definidos.
+- [x] Política de idempotencia definida.
+- [x] Protocolo de resultado verificable revisado.
+- [x] Entornos y secretos planificados.
+- [x] Criterios de salida de cada fase entendidos.
+- [ ] `schema.prisma` traducido sin reinterpretar el diccionario.
+- [ ] Migración inicial y SQL complementario revisados antes de ejecutarse.
 
 
 # ANEXO G. PUNTOS PARAMETRIZABLES SIN CAMBIAR LA IDEA
@@ -2118,6 +2254,12 @@ else:
 | Número de días futuros autogenerados | Operativo y ajustable. |
 | Canales de notificación | Opcionales. |
 
+
+# DECLARACIÓN FINAL DE CONGELAMIENTO TÉCNICO
+
+Este Plan v1.1.0 queda alineado con las 112 reglas activas, las máquinas de estado, los 40 patrones financieros, las 133 claves de permiso y el diccionario de 101 tablas.
+
+El siguiente paso permitido es traducir la baseline a `schema.prisma`, migraciones SQL complementarias, seeds y pruebas. No se permite usar el proceso de implementación para cambiar reglas, estados, porcentajes, permisos o responsabilidades.
 
 # CONCLUSIÓN
 
