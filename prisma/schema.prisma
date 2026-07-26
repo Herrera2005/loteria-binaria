@@ -1,13 +1,2916 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// Lotería Binaria — schema.prisma v1.0.0
+// Traducción directa de DICCIONARIO-DE-DATOS.md v1.1.0.
+// Prisma ORM 7.9.x + PostgreSQL 16.
+// UUID v7 se genera en la aplicación; por eso las PK UUID no usan @default(uuid()).
+// CHECK, triggers, vistas, índices parciales e integridad diferida viven en prisma/sql/.
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider     = "prisma-client"
+  output       = "../apps/api/src/generated/prisma"
+  runtime      = "nodejs"
+  moduleFormat = "cjs"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider     = "postgresql"
+  relationMode = "foreignKeys"
+}
+
+enum AccountStatus {
+  PENDIENTE_VERIFICACION
+  ACTIVO
+  SUSPENDIDO
+  BLOQUEADO
+  DESACTIVADO
+
+  @@map("account_status")
+}
+
+enum ActiveMode {
+  CLIENTE
+  CLIENTE_FINANCIERO
+  VENDEDOR
+  ADMINISTRADOR
+
+  @@map("active_mode")
+}
+
+enum ActorType {
+  USER
+  ADMIN
+  WORKER
+  SYSTEM
+
+  @@map("actor_type")
+}
+
+enum SessionStatus {
+  ABIERTA
+  EXPIRADA
+  REVOCADA
+  CERRADA
+
+  @@map("session_status")
+}
+
+enum VerificationChannel {
+  EMAIL
+  PHONE
+
+  @@map("verification_channel")
+}
+
+enum VerificationPurpose {
+  ACCOUNT_VERIFICATION
+  CHANGE_CONTACT
+  PASSWORD_RECOVERY
+
+  @@map("verification_purpose")
+}
+
+enum CurrencyCode {
+  REAL
+  VIRTUAL
+
+  @@map("currency_code")
+}
+
+enum WalletStatus {
+  ACTIVE
+  BLOCKED
+  CLOSED
+
+  @@map("wallet_status")
+}
+
+enum IdempotencyStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+
+  @@map("idempotency_status")
+}
+
+enum LedgerTransactionStatus {
+  CONTABILIZADA
+  PARCIALMENTE_REVERSADA
+  REVERSADA
+
+  @@map("ledger_transaction_status")
+}
+
+enum LedgerSide {
+  DEBIT
+  CREDIT
+
+  @@map("ledger_side")
+}
+
+enum LedgerAccountType {
+  USER_REAL_AVAILABLE
+  USER_REAL_RESERVED_CONVERSION
+  USER_REAL_IN_WITHDRAWAL
+  USER_VIRTUAL_AVAILABLE
+  PLATFORM_REAL_CASH
+  SIMULATED_TOPUP_SOURCE_REAL
+  SIMULATED_PAYOUT_CLEARING_REAL
+  PLATFORM_VIRTUAL_ISSUANCE
+  PLATFORM_VIRTUAL_REDEMPTION
+  GENERAL_CONVERSION_WALLET
+  CONVERSION_FEES_VIRTUAL
+  PLATFORM_OPERATIONS_VIRTUAL
+  ROUNDING_ADJUSTMENTS_VIRTUAL
+  DRAW_SALES_FUND
+  DRAW_PRIZE_RESERVE
+  AWARD_PAYABLE
+  DRAW_UNAWARDED_MAJOR_PRIZE
+  DRAW_ACCUMULATION_EXTRA
+  GUARANTEE_FUND_AVAILABLE
+  GUARANTEE_FUND_RESERVED_EVENT
+  FUTURE_PRIZE_FUND
+  ACCUMULATION_POOL_PRODUCT
+  USER_DRAW_ESCROW
+  USER_DRAW_COMMISSION_HELD
+
+  @@map("ledger_account_type")
+}
+
+enum TopupStatus {
+  CREADA
+  CONFIRMADA_SIMULADA
+  FALLIDA
+
+  @@map("topup_status")
+}
+
+enum FinancialProcessStatus {
+  CREADA
+  PROCESANDO
+  COMPLETADA
+  RECHAZADA
+  ERROR_REINTENTABLE
+  REVISION_MANUAL
+
+  @@map("financial_process_status")
+}
+
+enum WithdrawalStatus {
+  SOLICITADO
+  EN_REVISION
+  APROBADO
+  COMPLETADO_SIMULADO
+  RECHAZADO
+  ERROR_REINTENTABLE
+  REVISION_MANUAL
+
+  @@map("withdrawal_status")
+}
+
+enum VendorProfileStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  CLOSED
+
+  @@map("vendor_profile_status")
+}
+
+enum VendorOrderStatus {
+  CREADA
+  PROCESANDO
+  CONFIRMADA
+  RECHAZADA
+  FALLIDA
+
+  @@map("vendor_order_status")
+}
+
+enum InventoryBatchStatus {
+  ACTIVE
+  DEPLETED
+  REVERSED
+
+  @@map("inventory_batch_status")
+}
+
+enum ConversionRequestStatus {
+  PENDIENTE
+  EN_PROCESO
+  COMPLETADA_POR_VENDEDOR
+  COMPLETADA_POR_PLATAFORMA
+  FALLIDA_POR_LIQUIDEZ
+
+  @@map("conversion_request_status")
+}
+
+enum ConversionAssignmentStatus {
+  ACTIVA
+  LIBERADA
+  CONSUMIDA
+  CERRADA_SIN_EFECTO
+
+  @@map("conversion_assignment_status")
+}
+
+enum RiskFlagStatus {
+  OPEN
+  CONFIRMED
+  DISMISSED
+  RESOLVED
+
+  @@map("risk_flag_status")
+}
+
+enum LotteryProductCode {
+  OCTAL
+  DECIMAL
+  HEXADECIMAL
+
+  @@map("lottery_product_code")
+}
+
+enum VersionStatus {
+  DRAFT
+  PUBLISHED
+  RETIRED
+
+  @@map("version_status")
+}
+
+enum TemplateStatus {
+  BORRADOR
+  ACTIVA
+  PAUSADA
+  INACTIVA
+
+  @@map("template_status")
+}
+
+enum DrawEventStatus {
+  BORRADOR
+  PROGRAMADO
+  PUBLICADO
+  VENTAS_ABIERTAS
+  VENTAS_CERRADAS
+  CONGELADO
+  RESULTADO_FIJADO
+  PREMIOS_CALCULADOS
+  INFORME_PUBLICADO
+  FINALIZADO
+  CANCELADO
+
+  @@map("draw_event_status")
+}
+
+enum CombinationStatus {
+  DISPONIBLE
+  RESERVADA
+  VENDIDA
+  BLOQUEADA
+
+  @@map("combination_status")
+}
+
+enum PurchaseSessionStatus {
+  ACTIVA
+  COMPLETADA
+  EXPIRADA
+  CERRADA_POR_EVENTO
+
+  @@map("purchase_session_status")
+}
+
+enum CartStatus {
+  ABIERTO
+  CONFIRMADO
+  EXPIRADO
+  CANCELADO
+  INVALIDADO_POR_EVENTO
+
+  @@map("cart_status")
+}
+
+enum ReservationStatus {
+  ACTIVA
+  CONSUMIDA
+  EXPIRADA
+  LIBERADA
+  INVALIDADA_POR_CIERRE
+  INVALIDADA_POR_CANCELACION
+
+  @@map("reservation_status")
+}
+
+enum PurchaseOrderStatus {
+  PENDIENTE
+  PROCESANDO
+  CONFIRMADA
+  RECHAZADA
+  ERROR_REINTENTABLE
+  REVISION_MANUAL
+
+  @@map("purchase_order_status")
+}
+
+enum TicketOwnershipStatus {
+  ACTIVO
+  REEMBOLSADO
+  ANULADO_POR_CORRECCION
+
+  @@map("ticket_ownership_status")
+}
+
+enum TicketEvaluationStatus {
+  PENDIENTE_RESULTADO
+  NO_PREMIADO
+  DEVOLUCION
+  GANADOR_MAYOR
+
+  @@map("ticket_evaluation_status")
+}
+
+enum TicketCreditStatus {
+  NO_APLICA
+  PENDIENTE
+  ACREDITANDO
+  ACREDITADO
+  ERROR_REINTENTABLE
+  REVISION_MANUAL
+
+  @@map("ticket_credit_status")
+}
+
+enum FundReservationStatus {
+  PENDIENTE
+  RESERVADA
+  CONSUMIDA
+  LIBERADA
+  CANCELADA
+
+  @@map("fund_reservation_status")
+}
+
+enum AccumulationTransferStatus {
+  PENDIENTE_ASIGNACION
+  ASIGNADA
+  APLICADA
+  DEVUELTA_AL_POOL
+  CANCELADA
+
+  @@map("accumulation_transfer_status")
+}
+
+enum CommitmentStatus {
+  GENERADO_SECRETO
+  PUBLICADO
+  REVELADO
+  INVALIDADO_POR_CANCELACION
+
+  @@map("commitment_status")
+}
+
+enum SnapshotStatus {
+  PENDIENTE
+  GENERADO
+  INVALIDADO_POR_CANCELACION
+
+  @@map("snapshot_status")
+}
+
+enum AwardCategory {
+  MAIN_PRIZE
+  NEAR_MATCH_REFUND
+  EVENT_REFUND
+  ADMIN_COMPENSATION
+
+  @@map("award_category")
+}
+
+enum AwardPaymentStatus {
+  CALCULADA
+  PREPARADA
+  ACREDITANDO
+  ACREDITADA
+  ERROR_REINTENTABLE
+  REVISION_MANUAL
+
+  @@map("award_payment_status")
+}
+
+enum ReportStatus {
+  PENDIENTE
+  PREPARADO
+  PUBLICADO
+  SUPERSEDED
+  ERROR_REINTENTABLE
+  REVISION_MANUAL
+
+  @@map("report_status")
+}
+
+enum UserDrawVisibility {
+  PUBLICO
+  PRIVADO
+
+  @@map("user_draw_visibility")
+}
+
+enum UserDrawStatus {
+  BORRADOR
+  PUBLICADO
+  VENTAS_ABIERTAS
+  VENTAS_CERRADAS
+  CONGELADO
+  RESULTADO_FIJADO
+  ENTREGA_PENDIENTE
+  FINALIZADO
+  CANCELADO
+  CERRADO_POR_INCUMPLIMIENTO
+
+  @@map("user_draw_status")
+}
+
+enum NumberAssignmentStatus {
+  RESERVADA
+  ASIGNADA
+  LIBERADA
+  BLOQUEADA
+
+  @@map("number_assignment_status")
+}
+
+enum NumberChangeStatus {
+  SOLICITADA
+  CONFIRMADA
+  RECHAZADA
+
+  @@map("number_change_status")
+}
+
+enum ParticipationPaymentStatus {
+  PENDIENTE
+  PAGADO
+  REEMBOLSANDO
+  REEMBOLSADO
+  FALLIDO
+
+  @@map("participation_payment_status")
+}
+
+enum ParticipationRelationStatus {
+  ACTIVO
+  ABANDONO_REGISTRADO
+  EXPULSADO
+
+  @@map("participation_relation_status")
+}
+
+enum ParticipationEligibilityStatus {
+  NO_ELEGIBLE
+  ACTIVA
+  EXCLUIDA
+
+  @@map("participation_eligibility_status")
+}
+
+enum ParticipationNumberStatus {
+  ACTIVA
+  REEMPLAZADA
+  LIBERADA
+
+  @@map("participation_number_status")
+}
+
+enum CodeUseStatus {
+  EMITIDO
+  RECLAMADO
+  EXPIRADO
+
+  @@map("code_use_status")
+}
+
+enum CodePaymentStatus {
+  PENDIENTE
+  PAGADO
+  REEMBOLSADO
+  FALLIDO
+
+  @@map("code_payment_status")
+}
+
+enum CodeReservationStatus {
+  ACTIVA
+  CONSUMIDA
+  LIBERADA
+
+  @@map("code_reservation_status")
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  REVOKED
+
+  @@map("invitation_status")
+}
+
+enum DeliveryStatus {
+  PENDIENTE
+  REGISTRADA_POR_ORGANIZADOR
+  CONFIRMADA_POR_GANADOR
+  EN_RECLAMO
+  INCUMPLIMIENTO_CONFIRMADO
+  CERRADA
+
+  @@map("delivery_status")
+}
+
+enum UserDrawClaimType {
+  ACCESS
+  PAYMENT
+  NUMBER
+  REFUND
+  EXIT
+  EXPULSION
+  RESULT
+  PRIZE
+  DELIVERY
+
+  @@map("user_draw_claim_type")
+}
+
+enum ClaimStatus {
+  PRESENTADO
+  EN_REVISION
+  ESPERANDO_EVIDENCIA
+  RESUELTO
+  RECHAZADO
+  APELADO
+  CERRADO
+
+  @@map("claim_status")
+}
+
+enum EscrowStatus {
+  RETENIDA
+  LIBERABLE
+  EN_DISPUTA
+  LIBERANDO
+  LIBERADA
+  REEMBOLSO_ORDENADO
+  REEMBOLSANDO
+  REEMBOLSADA
+
+  @@map("escrow_status")
+}
+
+enum StoredObjectStatus {
+  PENDING
+  AVAILABLE
+  QUARANTINED
+  DELETED
+
+  @@map("stored_object_status")
+}
+
+enum OutboxStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+  DEAD_LETTER
+
+  @@map("outbox_status")
+}
+
+enum InboxStatus {
+  RECEIVED
+  PROCESSED
+  FAILED
+
+  @@map("inbox_status")
+}
+
+enum JobStatus {
+  PROGRAMADO
+  EJECUTANDO
+  COMPLETADO
+  ESPERANDO_REINTENTO
+  REVISION_MANUAL
+  CANCELADO
+  SIN_EFECTO_IDEMPOTENTE
+
+  @@map("job_status")
+}
+
+enum SecuritySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+
+  @@map("security_severity")
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  READ
+  CANCELLED
+
+  @@map("notification_status")
+}
+
+/// Reservas dentro del carrito.
+model CartItems {
+  id                          String                  @id @db.Uuid
+  shopping_cart_id            String                  @db.Uuid
+  reservation_id              String                  @unique @db.Uuid
+  combination_id              String                  @db.Uuid
+  unit_price_virtual_minor    BigInt
+  added_at                    DateTime                @db.Timestamptz(6)
+  created_at                  DateTime                @default(now()) @db.Timestamptz(6)
+  rel_shopping_cart_id        ShoppingCarts           @relation("fk_cart_items_shopping_cart_id", fields: [shopping_cart_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_reservation_id          CombinationReservations @relation("fk_cart_items_reservation_id", fields: [reservation_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_reservation_combination CombinationReservations @relation("fk_cart_item_reservation_combination", fields: [reservation_id, combination_id], references: [id, combination_id], onDelete: Restrict, onUpdate: Cascade, map: "fk_cart_item_reservation_combination")
+  rel_combination_id          EventCombinations       @relation("fk_cart_items_combination_id", fields: [combination_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([shopping_cart_id, combination_id], map: "uq_cart_items_shopping_cart_id_combination_id")
+  @@map("cart_items")
+}
+
+/// Reserva exclusiva de hasta cinco minutos, limitada por el cierre.
+model CombinationReservations {
+  id                                     String            @id @db.Uuid
+  combination_id                         String            @db.Uuid
+  draw_event_id                          String            @db.Uuid
+  user_id                                String            @db.Uuid
+  purchase_session_id                    String            @db.Uuid
+  status                                 ReservationStatus
+  reserved_at                            DateTime          @db.Timestamptz(6)
+  expires_at                             DateTime          @db.Timestamptz(6)
+  consumed_at                            DateTime?         @db.Timestamptz(6)
+  released_at                            DateTime?         @db.Timestamptz(6)
+  created_at                             DateTime          @default(now()) @db.Timestamptz(6)
+  rel_combination_id                     EventCombinations @relation("fk_combination_reservations_combination_id", fields: [combination_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_draw_event_id                      DrawEvents        @relation("fk_combination_reservations_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_user_id                            Users             @relation("fk_combination_reservations_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_purchase_session_id                PurchaseSessions  @relation("fk_combination_reservations_purchase_session_id", fields: [purchase_session_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_combination_event                  EventCombinations @relation("fk_reservation_combination_event", fields: [combination_id, draw_event_id], references: [id, draw_event_id], onDelete: Restrict, onUpdate: Cascade, map: "fk_reservation_combination_event")
+  rel_session_owner_event                PurchaseSessions  @relation("fk_reservation_session_owner_event", fields: [purchase_session_id, user_id, draw_event_id], references: [id, user_id, draw_event_id], onDelete: Restrict, onUpdate: Cascade, map: "fk_reservation_session_owner_event")
+  rev_cart_items_reservation_id          CartItems?        @relation("fk_cart_items_reservation_id")
+  rev_cart_items_reservation_combination CartItems[]       @relation("fk_cart_item_reservation_combination")
+
+  @@unique([id, combination_id], map: "uq_reservation_combination")
+  @@index([user_id, draw_event_id, status], map: "ix_combination_reservations_user_id_draw_event_id_status")
+  @@index([expires_at], map: "ix_combination_reservations_expires_at")
+  @@map("combination_reservations")
+}
+
+/// Orden idempotente que confirma boletos.
+model PurchaseOrders {
+  id                            String              @id @db.Uuid
+  public_id                     String              @unique @db.VarChar(40)
+  user_id                       String              @db.Uuid
+  draw_event_id                 String              @db.Uuid
+  shopping_cart_id              String              @unique @db.Uuid
+  status                        PurchaseOrderStatus
+  ticket_count                  Int
+  total_virtual_minor           BigInt
+  ledger_transaction_id         String?             @unique @db.Uuid
+  idempotency_key_id            String              @db.Uuid
+  confirmed_at                  DateTime?           @db.Timestamptz(6)
+  rejection_code                String?             @db.VarChar(80)
+  created_at                    DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_id                   Users               @relation("fk_purchase_orders_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_draw_event_id             DrawEvents          @relation("fk_purchase_orders_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_shopping_cart_id          ShoppingCarts       @relation("fk_purchase_orders_shopping_cart_id", fields: [shopping_cart_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_cart_owner_event          ShoppingCarts       @relation("fk_order_cart_owner_event", fields: [shopping_cart_id, user_id, draw_event_id], references: [id, user_id, draw_event_id], onDelete: Restrict, onUpdate: Cascade, map: "fk_order_cart_owner_event")
+  rel_ledger_transaction_id     LedgerTransactions? @relation("fk_purchase_orders_ledger_transaction_id", fields: [ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_idempotency_key_id        IdempotencyKeys     @relation("fk_purchase_orders_idempotency_key_id", fields: [idempotency_key_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_tickets_purchase_order_id Tickets[]           @relation("fk_tickets_purchase_order_id")
+  rev_tickets_order_owner_event Tickets[]           @relation("fk_ticket_order_owner_event")
+
+  @@unique([id, user_id, draw_event_id], map: "uq_purchase_order_owner_event")
+  @@map("purchase_orders")
+}
+
+/// Sesión temporal de compra.
+model PurchaseSessions {
+  id                                               String                    @id @db.Uuid
+  user_id                                          String                    @db.Uuid
+  draw_event_id                                    String                    @db.Uuid
+  status                                           PurchaseSessionStatus
+  expires_at                                       DateTime                  @db.Timestamptz(6)
+  completed_at                                     DateTime?                 @db.Timestamptz(6)
+  created_at                                       DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime                  @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_id                                      Users                     @relation("fk_purchase_sessions_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_draw_event_id                                DrawEvents                @relation("fk_purchase_sessions_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_combination_reservations_purchase_session_id CombinationReservations[] @relation("fk_combination_reservations_purchase_session_id")
+  rev_combination_reservations_session_owner_event CombinationReservations[] @relation("fk_reservation_session_owner_event")
+  rev_shopping_carts_purchase_session_id           ShoppingCarts?            @relation("fk_shopping_carts_purchase_session_id")
+  rev_shopping_carts_session_owner_event           ShoppingCarts[]           @relation("fk_cart_session_owner_event")
+
+  @@unique([id, user_id, draw_event_id], map: "uq_purchase_session_owner_event")
+  @@index([user_id, status], map: "ix_purchase_sessions_user_id_status")
+  @@index([expires_at], map: "ix_purchase_sessions_expires_at")
+  @@map("purchase_sessions")
+}
+
+/// Carrito asociado a la sesión.
+model ShoppingCarts {
+  id                                   String           @id @db.Uuid
+  purchase_session_id                  String           @unique @db.Uuid
+  user_id                              String           @db.Uuid
+  draw_event_id                        String           @db.Uuid
+  status                               CartStatus
+  expires_at                           DateTime         @db.Timestamptz(6)
+  confirmed_at                         DateTime?        @db.Timestamptz(6)
+  created_at                           DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_purchase_session_id              PurchaseSessions @relation("fk_shopping_carts_purchase_session_id", fields: [purchase_session_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_session_owner_event              PurchaseSessions @relation("fk_cart_session_owner_event", fields: [purchase_session_id, user_id, draw_event_id], references: [id, user_id, draw_event_id], onDelete: Restrict, onUpdate: Cascade, map: "fk_cart_session_owner_event")
+  rel_user_id                          Users            @relation("fk_shopping_carts_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_draw_event_id                    DrawEvents       @relation("fk_shopping_carts_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_cart_items_shopping_cart_id      CartItems[]      @relation("fk_cart_items_shopping_cart_id")
+  rev_purchase_orders_shopping_cart_id PurchaseOrders?  @relation("fk_purchase_orders_shopping_cart_id")
+  rev_purchase_orders_cart_owner_event PurchaseOrders[] @relation("fk_order_cart_owner_event")
+
+  @@unique([id, user_id, draw_event_id], map: "uq_shopping_cart_owner_event")
+  @@index([user_id, status], map: "ix_shopping_carts_user_id_status")
+  @@map("shopping_carts")
+}
+
+/// Símbolos del boleto.
+model TicketNumbers {
+  id            String   @id @db.Uuid
+  ticket_id     String   @db.Uuid
+  symbol        String   @db.VarChar(2)
+  sort_order    Int      @db.SmallInt
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  rel_ticket_id Tickets  @relation("fk_ticket_numbers_ticket_id", fields: [ticket_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([ticket_id, symbol], map: "uq_ticket_numbers_ticket_id_symbol")
+  @@unique([ticket_id, sort_order], map: "uq_ticket_numbers_ticket_id_sort_order")
+  @@map("ticket_numbers")
+}
+
+/// Historial multidimensional de propiedad, evaluación y crédito.
+model TicketStatusHistory {
+  id                String    @id @db.Uuid
+  ticket_id         String    @db.Uuid
+  dimension         String    @db.VarChar(30)
+  from_status       String?   @db.VarChar(50)
+  to_status         String    @db.VarChar(50)
+  transition_code   String    @db.VarChar(80)
+  actor_type        ActorType
+  actor_user_id     String?   @db.Uuid
+  reason            String?   @db.Text
+  correlation_id    String    @db.Uuid
+  occurred_at       DateTime  @db.Timestamptz(6)
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  rel_ticket_id     Tickets   @relation("fk_ticket_status_history_ticket_id", fields: [ticket_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_actor_user_id Users?    @relation("fk_ticket_status_history_actor_user_id", fields: [actor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([ticket_id, occurred_at], map: "ix_ticket_status_history_ticket_id_occurred_at")
+  @@map("ticket_status_history")
+}
+
+/// Boleto pagado e inmutable.
+model Tickets {
+  id                                  String                 @id @db.Uuid
+  public_id                           String                 @unique @db.VarChar(50)
+  purchase_order_id                   String                 @db.Uuid
+  user_id                             String                 @db.Uuid
+  draw_event_id                       String                 @db.Uuid
+  combination_id                      String                 @unique @db.Uuid
+  rule_version_id                     String                 @db.Uuid
+  normalized_key                      String                 @db.VarChar(80)
+  price_virtual_minor                 BigInt
+  ownership_status                    TicketOwnershipStatus
+  evaluation_status                   TicketEvaluationStatus
+  credit_status                       TicketCreditStatus
+  purchase_ledger_transaction_id      String                 @db.Uuid
+  purchased_at                        DateTime               @db.Timestamptz(6)
+  created_at                          DateTime               @default(now()) @db.Timestamptz(6)
+  rel_purchase_order_id               PurchaseOrders         @relation("fk_tickets_purchase_order_id", fields: [purchase_order_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_order_owner_event               PurchaseOrders         @relation("fk_ticket_order_owner_event", fields: [purchase_order_id, user_id, draw_event_id], references: [id, user_id, draw_event_id], onDelete: Restrict, onUpdate: Cascade, map: "fk_ticket_order_owner_event")
+  rel_user_id                         Users                  @relation("fk_tickets_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_draw_event_id                   DrawEvents             @relation("fk_tickets_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_combination_id                  EventCombinations      @relation("fk_tickets_combination_id", fields: [combination_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_combination_event               EventCombinations      @relation("fk_ticket_combination_event", fields: [combination_id, draw_event_id], references: [id, draw_event_id], onDelete: Restrict, onUpdate: Cascade, map: "fk_ticket_combination_event")
+  rel_rule_version_id                 RuleVersions           @relation("fk_tickets_rule_version_id", fields: [rule_version_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_event_rule                      DrawEvents             @relation("fk_ticket_event_rule", fields: [draw_event_id, rule_version_id], references: [id, rule_version_id], onDelete: Restrict, onUpdate: Cascade, map: "fk_ticket_event_rule")
+  rel_purchase_ledger_transaction_id  LedgerTransactions     @relation("fk_tickets_purchase_ledger_transaction_id", fields: [purchase_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_ticket_numbers_ticket_id        TicketNumbers[]        @relation("fk_ticket_numbers_ticket_id")
+  rev_ticket_status_history_ticket_id TicketStatusHistory[]  @relation("fk_ticket_status_history_ticket_id")
+  rev_draw_snapshot_tickets_ticket_id DrawSnapshotTickets[]  @relation("fk_draw_snapshot_tickets_ticket_id")
+  rev_prize_awards_ticket_id          PrizeAwards[]          @relation("fk_prize_awards_ticket_id")
+  rev_ticket_evaluations_ticket_id    TicketEvaluations?     @relation("fk_ticket_evaluations_ticket_id")
+  rev_ticket_evaluations_ticket_event TicketEvaluations[]    @relation("fk_evaluation_ticket_event")
+
+  @@unique([draw_event_id, normalized_key], map: "uq_tickets_draw_event_id_normalized_key")
+  @@unique([id, draw_event_id], map: "uq_ticket_event")
+  @@index([user_id, purchased_at], map: "ix_tickets_user_id_purchased_at")
+  @@index([draw_event_id, evaluation_status], map: "ix_tickets_draw_event_id_evaluation_status")
+  @@map("tickets")
+}
+
+/// Deduplicación de comandos y respuesta persistida.
+model IdempotencyKeys {
+  id                                                 String                     @id @db.Uuid
+  subject_user_id                                    String?                    @db.Uuid
+  scope                                              String                     @db.VarChar(120)
+  key_value                                          String                     @db.VarChar(200)
+  request_hash                                       String                     @db.VarChar(128)
+  status                                             IdempotencyStatus
+  response_status                                    Int?
+  response_body                                      Json?                      @db.JsonB
+  resource_type                                      String?                    @db.VarChar(80)
+  resource_id                                        String?                    @db.Uuid
+  locked_at                                          DateTime?                  @db.Timestamptz(6)
+  expires_at                                         DateTime?                  @db.Timestamptz(6)
+  created_at                                         DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime                   @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_subject_user_id                                Users?                     @relation("fk_idempotency_keys_subject_user_id", fields: [subject_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_purchase_orders_idempotency_key_id             PurchaseOrders[]           @relation("fk_purchase_orders_idempotency_key_id")
+  rev_ledger_transactions_idempotency_key_id         LedgerTransactions[]       @relation("fk_ledger_transactions_idempotency_key_id")
+  rev_real_topups_idempotency_key_id                 RealTopups[]               @relation("fk_real_topups_idempotency_key_id")
+  rev_virtual_to_real_conversions_idempotency_key_id VirtualToRealConversions[] @relation("fk_virtual_to_real_conversions_idempotency_key_id")
+  rev_virtual_transfers_idempotency_key_id           VirtualTransfers[]         @relation("fk_virtual_transfers_idempotency_key_id")
+  rev_award_payment_orders_idempotency_key_id        AwardPaymentOrders[]       @relation("fk_award_payment_orders_idempotency_key_id")
+  rev_conversion_requests_idempotency_key_id         ConversionRequests[]       @relation("fk_conversion_requests_idempotency_key_id")
+  rev_vendor_purchase_orders_idempotency_key_id      VendorPurchaseOrders[]     @relation("fk_vendor_purchase_orders_idempotency_key_id")
+
+  @@map("idempotency_keys")
+}
+
+/// Cuentas del subledger para usuarios, plataforma, eventos, fondos y escrow.
+model LedgerAccounts {
+  id                                                         String                     @id @db.Uuid
+  account_code                                               String                     @unique @db.VarChar(120)
+  currency                                                   CurrencyCode
+  account_type                                               LedgerAccountType
+  wallet_id                                                  String?                    @db.Uuid
+  user_id                                                    String?                    @db.Uuid
+  draw_event_id                                              String?                    @db.Uuid
+  user_draw_id                                               String?                    @db.Uuid
+  allows_negative                                            Boolean
+  is_active                                                  Boolean
+  created_at                                                 DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                                                 DateTime                   @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_wallet_id                                              Wallets?                   @relation("fk_ledger_accounts_wallet_id", fields: [wallet_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_user_id                                                Users?                     @relation("fk_ledger_accounts_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_draw_event_id                                          DrawEvents?                @relation("fk_ledger_accounts_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_user_draw_id                                           UserDraws?                 @relation("fk_ledger_accounts_user_draw_id", fields: [user_draw_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_ledger_entries_account_id                              LedgerEntries[]            @relation("fk_ledger_entries_account_id")
+  rev_accumulation_pools_ledger_account_id                   AccumulationPools?         @relation("fk_accumulation_pools_ledger_account_id")
+  rev_future_prize_fund_ledger_account_id                    FuturePrizeFund?           @relation("fk_future_prize_fund_ledger_account_id")
+  rev_guarantee_fund_ledger_account_id                       GuaranteeFund?             @relation("fk_guarantee_fund_ledger_account_id")
+  rev_guarantee_fund_reservations_reserved_ledger_account_id GuaranteeFundReservations? @relation("fk_guarantee_fund_reservations_reserved_ledger_account_id")
+  rev_user_draw_escrows_escrow_ledger_account_id             UserDrawEscrows?           @relation("fk_user_draw_escrows_escrow_ledger_account_id")
+  rev_user_draw_escrows_commission_held_account_id           UserDrawEscrows?           @relation("fk_user_draw_escrows_commission_held_account_id")
+
+  @@map("ledger_accounts")
+}
+
+/// Débitos y créditos.
+model LedgerEntries {
+  id                                      String             @id @db.Uuid
+  ledger_transaction_id                   String             @db.Uuid
+  account_id                              String             @db.Uuid
+  reversal_of_entry_id                    String?            @db.Uuid
+  currency                                CurrencyCode
+  side                                    LedgerSide
+  amount_minor                            BigInt
+  sequence                                Int                @db.SmallInt
+  memo_code                               String             @db.VarChar(100)
+  created_at                              DateTime           @default(now()) @db.Timestamptz(6)
+  rel_ledger_transaction_id               LedgerTransactions @relation("fk_ledger_entries_ledger_transaction_id", fields: [ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_account_id                          LedgerAccounts     @relation("fk_ledger_entries_account_id", fields: [account_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_reversal_of_entry_id                LedgerEntries?     @relation("fk_ledger_entries_reversal_of_entry_id", fields: [reversal_of_entry_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_ledger_entries_reversal_of_entry_id LedgerEntries[]    @relation("fk_ledger_entries_reversal_of_entry_id")
+
+  @@unique([ledger_transaction_id, sequence], map: "uq_ledger_entries_ledger_transaction_id_sequence")
+  @@index([account_id, created_at], map: "ix_ledger_entries_account_id_created_at")
+  @@index([ledger_transaction_id], map: "ix_ledger_entries_ledger_transaction_id")
+  @@map("ledger_entries")
+}
+
+/// Cabecera inmutable de operación financiera.
+model LedgerTransactions {
+  id                                                                String                     @id @db.Uuid
+  transaction_type                                                  String                     @db.VarChar(100)
+  status                                                            LedgerTransactionStatus
+  correlation_id                                                    String                     @db.Uuid
+  idempotency_key_id                                                String?                    @db.Uuid
+  reversal_of_transaction_id                                        String?                    @db.Uuid
+  business_reference_type                                           String                     @db.VarChar(80)
+  business_reference_id                                             String                     @db.Uuid
+  rule_version_id                                                   String?                    @db.Uuid
+  description                                                       String?                    @db.Text
+  calculation_snapshot                                              Json?                      @db.JsonB
+  posted_at                                                         DateTime                   @db.Timestamptz(6)
+  created_at                                                        DateTime                   @default(now()) @db.Timestamptz(6)
+  rel_idempotency_key_id                                            IdempotencyKeys?           @relation("fk_ledger_transactions_idempotency_key_id", fields: [idempotency_key_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_reversal_of_transaction_id                                    LedgerTransactions?        @relation("fk_ledger_transactions_reversal_of_transaction_id", fields: [reversal_of_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_rule_version_id                                               RuleVersions?              @relation("fk_ledger_transactions_rule_version_id", fields: [rule_version_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_purchase_orders_ledger_transaction_id                         PurchaseOrders?            @relation("fk_purchase_orders_ledger_transaction_id")
+  rev_tickets_purchase_ledger_transaction_id                        Tickets[]                  @relation("fk_tickets_purchase_ledger_transaction_id")
+  rev_ledger_entries_ledger_transaction_id                          LedgerEntries[]            @relation("fk_ledger_entries_ledger_transaction_id")
+  rev_ledger_transactions_reversal_of_transaction_id                LedgerTransactions[]       @relation("fk_ledger_transactions_reversal_of_transaction_id")
+  rev_real_topups_ledger_transaction_id                             RealTopups?                @relation("fk_real_topups_ledger_transaction_id")
+  rev_virtual_to_real_conversions_ledger_transaction_id             VirtualToRealConversions?  @relation("fk_virtual_to_real_conversions_ledger_transaction_id")
+  rev_virtual_transfers_ledger_transaction_id                       VirtualTransfers?          @relation("fk_virtual_transfers_ledger_transaction_id")
+  rev_withdrawal_requests_reserve_ledger_transaction_id             WithdrawalRequests?        @relation("fk_withdrawal_requests_reserve_ledger_transaction_id")
+  rev_withdrawal_requests_settlement_ledger_transaction_id          WithdrawalRequests?        @relation("fk_withdrawal_requests_settlement_ledger_transaction_id")
+  rev_accumulation_transfers_assign_ledger_transaction_id           AccumulationTransfers?     @relation("fk_accumulation_transfers_assign_ledger_transaction_id")
+  rev_accumulation_transfers_return_ledger_transaction_id           AccumulationTransfers?     @relation("fk_accumulation_transfers_return_ledger_transaction_id")
+  rev_fund_movements_ledger_transaction_id                          FundMovements?             @relation("fk_fund_movements_ledger_transaction_id")
+  rev_guarantee_fund_reservations_reservation_ledger_transaction_id GuaranteeFundReservations? @relation("fk_guarantee_fund_reservations_reservation_ledger_transaction_id")
+  rev_guarantee_fund_reservations_settlement_ledger_transaction_id  GuaranteeFundReservations? @relation("fk_guarantee_fund_reservations_settlement_ledger_transaction_id")
+  rev_award_payment_orders_ledger_transaction_id                    AwardPaymentOrders?        @relation("fk_award_payment_orders_ledger_transaction_id")
+  rev_user_draw_access_codes_payment_ledger_transaction_id          UserDrawAccessCodes?       @relation("fk_user_draw_access_codes_payment_ledger_transaction_id")
+  rev_user_draw_access_codes_refund_ledger_transaction_id           UserDrawAccessCodes?       @relation("fk_user_draw_access_codes_refund_ledger_transaction_id")
+  rev_user_draw_claims_compensation_ledger_transaction_id           UserDrawClaims?            @relation("fk_user_draw_claims_compensation_ledger_transaction_id")
+  rev_user_draw_escrow_events_ledger_transaction_id                 UserDrawEscrowEvents[]     @relation("fk_user_draw_escrow_events_ledger_transaction_id")
+  rev_user_draw_escrows_release_ledger_transaction_id               UserDrawEscrows?           @relation("fk_user_draw_escrows_release_ledger_transaction_id")
+  rev_user_draw_participations_payment_ledger_transaction_id        UserDrawParticipations?    @relation("fk_user_draw_participations_payment_ledger_transaction_id")
+  rev_user_draw_participations_refund_ledger_transaction_id         UserDrawParticipations?    @relation("fk_user_draw_participations_refund_ledger_transaction_id")
+  rev_conversion_requests_real_reservation_ledger_transaction_id    ConversionRequests?        @relation("fk_conversion_requests_real_reservation_ledger_transaction_id")
+  rev_conversion_requests_completion_ledger_transaction_id          ConversionRequests?        @relation("fk_conversion_requests_completion_ledger_transaction_id")
+  rev_vendor_purchase_orders_ledger_transaction_id                  VendorPurchaseOrders?      @relation("fk_vendor_purchase_orders_ledger_transaction_id")
+  rev_vendor_sales_ledger_transaction_id                            VendorSales?               @relation("fk_vendor_sales_ledger_transaction_id")
+
+  @@index([business_reference_type, business_reference_id], map: "ix_ledger_transactions_business_reference_type_busin_cc7ea76683")
+  @@index([correlation_id], map: "ix_ledger_transactions_correlation_id")
+  @@map("ledger_transactions")
+}
+
+/// Eventos externos deduplicados y sanitizados.
+model PaymentProviderEvents {
+  id                String    @id @db.Uuid
+  provider          String    @db.VarChar(50)
+  external_event_id String    @db.VarChar(180)
+  event_type        String    @db.VarChar(100)
+  payload_hash      String    @db.VarChar(128)
+  sanitized_payload Json?     @db.JsonB
+  received_at       DateTime  @db.Timestamptz(6)
+  processed_at      DateTime? @db.Timestamptz(6)
+  processing_error  String?   @db.Text
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@unique([provider, external_event_id], map: "uq_payment_provider_events_provider_external_event_id")
+  @@map("payment_provider_events")
+}
+
+/// Recargas REAL simuladas o futuras.
+model RealTopups {
+  id                        String              @id @db.Uuid
+  user_id                   String              @db.Uuid
+  wallet_id                 String              @db.Uuid
+  provider_type             String              @db.VarChar(40)
+  provider_reference        String?             @db.VarChar(150)
+  amount_real_minor         BigInt
+  status                    TopupStatus
+  ledger_transaction_id     String?             @unique @db.Uuid
+  idempotency_key_id        String              @db.Uuid
+  confirmed_at              DateTime?           @db.Timestamptz(6)
+  created_at                DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_id               Users               @relation("fk_real_topups_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_wallet_id             Wallets             @relation("fk_real_topups_wallet_id", fields: [wallet_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_ledger_transaction_id LedgerTransactions? @relation("fk_real_topups_ledger_transaction_id", fields: [ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_idempotency_key_id    IdempotencyKeys     @relation("fk_real_topups_idempotency_key_id", fields: [idempotency_key_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([user_id, created_at], map: "ix_real_topups_user_id_created_at")
+  @@index([status], map: "ix_real_topups_status")
+  @@map("real_topups")
+}
+
+/// Conversión VIRTUAL→REAL con 10 %.
+model VirtualToRealConversions {
+  id                        String                 @id @db.Uuid
+  user_id                   String                 @db.Uuid
+  virtual_wallet_id         String                 @db.Uuid
+  real_wallet_id            String                 @db.Uuid
+  gross_virtual_minor       BigInt
+  fee_virtual_minor         BigInt
+  net_real_minor            BigInt
+  fee_rate_bps              Int
+  allocation_policy_code    String                 @db.VarChar(60)
+  calculation_snapshot      Json                   @db.JsonB
+  status                    FinancialProcessStatus
+  ledger_transaction_id     String?                @unique @db.Uuid
+  idempotency_key_id        String                 @db.Uuid
+  completed_at              DateTime?              @db.Timestamptz(6)
+  created_at                DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime               @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_id               Users                  @relation("fk_virtual_to_real_conversions_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_virtual_wallet_id     Wallets                @relation("fk_virtual_to_real_conversions_virtual_wallet_id", fields: [virtual_wallet_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_real_wallet_id        Wallets                @relation("fk_virtual_to_real_conversions_real_wallet_id", fields: [real_wallet_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_ledger_transaction_id LedgerTransactions?    @relation("fk_virtual_to_real_conversions_ledger_transaction_id", fields: [ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_idempotency_key_id    IdempotencyKeys        @relation("fk_virtual_to_real_conversions_idempotency_key_id", fields: [idempotency_key_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([user_id, created_at], map: "ix_virtual_to_real_conversions_user_id_created_at")
+  @@index([status], map: "ix_virtual_to_real_conversions_status")
+  @@map("virtual_to_real_conversions")
+}
+
+/// Transferencias VIRTUAL entre clientes.
+model VirtualTransfers {
+  id                        String                 @id @db.Uuid
+  sender_user_id            String                 @db.Uuid
+  recipient_user_id         String                 @db.Uuid
+  amount_virtual_minor      BigInt
+  status                    FinancialProcessStatus
+  ledger_transaction_id     String?                @unique @db.Uuid
+  idempotency_key_id        String                 @db.Uuid
+  completed_at              DateTime?              @db.Timestamptz(6)
+  created_at                DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime               @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_sender_user_id        Users                  @relation("fk_virtual_transfers_sender_user_id", fields: [sender_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_recipient_user_id     Users                  @relation("fk_virtual_transfers_recipient_user_id", fields: [recipient_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_ledger_transaction_id LedgerTransactions?    @relation("fk_virtual_transfers_ledger_transaction_id", fields: [ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_idempotency_key_id    IdempotencyKeys        @relation("fk_virtual_transfers_idempotency_key_id", fields: [idempotency_key_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([sender_user_id, created_at], map: "ix_virtual_transfers_sender_user_id_created_at")
+  @@index([recipient_user_id, created_at], map: "ix_virtual_transfers_recipient_user_id_created_at")
+  @@map("virtual_transfers")
+}
+
+/// Proyección reconstruible de saldo.
+model WalletBalanceProjections {
+  id                  String   @id @db.Uuid
+  wallet_id           String   @unique @db.Uuid
+  available_minor     BigInt
+  reserved_minor      BigInt
+  pending_minor       BigInt
+  blocked_minor       BigInt
+  in_withdrawal_minor BigInt
+  ledger_version      BigInt
+  calculated_at       DateTime @db.Timestamptz(6)
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_wallet_id       Wallets  @relation("fk_wallet_balance_projections_wallet_id", fields: [wallet_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([calculated_at], map: "ix_wallet_balance_projections_calculated_at")
+  @@map("wallet_balance_projections")
+}
+
+/// Wallet por usuario y unidad; no guarda el saldo autoritativo.
+model Wallets {
+  id                                                String                     @id @db.Uuid
+  user_id                                           String                     @db.Uuid
+  currency                                          CurrencyCode
+  status                                            WalletStatus
+  closed_at                                         DateTime?                  @db.Timestamptz(6)
+  created_at                                        DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                                        DateTime                   @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_id                                       Users                      @relation("fk_wallets_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_ledger_accounts_wallet_id                     LedgerAccounts[]           @relation("fk_ledger_accounts_wallet_id")
+  rev_real_topups_wallet_id                         RealTopups[]               @relation("fk_real_topups_wallet_id")
+  rev_virtual_to_real_conversions_virtual_wallet_id VirtualToRealConversions[] @relation("fk_virtual_to_real_conversions_virtual_wallet_id")
+  rev_virtual_to_real_conversions_real_wallet_id    VirtualToRealConversions[] @relation("fk_virtual_to_real_conversions_real_wallet_id")
+  rev_wallet_balance_projections_wallet_id          WalletBalanceProjections?  @relation("fk_wallet_balance_projections_wallet_id")
+  rev_withdrawal_requests_real_wallet_id            WithdrawalRequests[]       @relation("fk_withdrawal_requests_real_wallet_id")
+
+  @@unique([user_id, currency], map: "uq_wallets_user_id_currency")
+  @@map("wallets")
+}
+
+/// Retiros REAL simulados.
+model WithdrawalRequests {
+  id                                   String              @id @db.Uuid
+  user_id                              String              @db.Uuid
+  real_wallet_id                       String              @db.Uuid
+  amount_real_minor                    BigInt
+  status                               WithdrawalStatus
+  reserve_ledger_transaction_id        String?             @unique @db.Uuid
+  settlement_ledger_transaction_id     String?             @unique @db.Uuid
+  provider_reference                   String?             @db.VarChar(150)
+  reviewed_by_user_id                  String?             @db.Uuid
+  review_reason                        String?             @db.Text
+  completed_at                         DateTime?           @db.Timestamptz(6)
+  created_at                           DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_id                          Users               @relation("fk_withdrawal_requests_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_real_wallet_id                   Wallets             @relation("fk_withdrawal_requests_real_wallet_id", fields: [real_wallet_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_reserve_ledger_transaction_id    LedgerTransactions? @relation("fk_withdrawal_requests_reserve_ledger_transaction_id", fields: [reserve_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_settlement_ledger_transaction_id LedgerTransactions? @relation("fk_withdrawal_requests_settlement_ledger_transaction_id", fields: [settlement_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_reviewed_by_user_id              Users?              @relation("fk_withdrawal_requests_reviewed_by_user_id", fields: [reviewed_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([user_id, created_at], map: "ix_withdrawal_requests_user_id_created_at")
+  @@index([status], map: "ix_withdrawal_requests_status")
+  @@map("withdrawal_requests")
+}
+
+/// Pool por producto.
+model AccumulationPools {
+  id                                              String                  @id @db.Uuid
+  lottery_product_id                              String                  @unique @db.Uuid
+  ledger_account_id                               String                  @unique @db.Uuid
+  is_active                                       Boolean
+  created_at                                      DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                                      DateTime                @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_lottery_product_id                          LotteryProducts         @relation("fk_accumulation_pools_lottery_product_id", fields: [lottery_product_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_ledger_account_id                           LedgerAccounts          @relation("fk_accumulation_pools_ledger_account_id", fields: [ledger_account_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_accumulation_transfers_accumulation_pool_id AccumulationTransfers[] @relation("fk_accumulation_transfers_accumulation_pool_id")
+
+  @@map("accumulation_pools")
+}
+
+/// Asignación y retorno de acumulado.
+model AccumulationTransfers {
+  id                               String                     @id @db.Uuid
+  accumulation_pool_id             String                     @db.Uuid
+  source_draw_event_id             String                     @db.Uuid
+  target_draw_event_id             String?                    @db.Uuid
+  amount_virtual_minor             BigInt
+  status                           AccumulationTransferStatus
+  assign_ledger_transaction_id     String?                    @unique @db.Uuid
+  return_ledger_transaction_id     String?                    @unique @db.Uuid
+  assigned_at                      DateTime?                  @db.Timestamptz(6)
+  applied_at                       DateTime?                  @db.Timestamptz(6)
+  created_at                       DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                       DateTime                   @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_accumulation_pool_id         AccumulationPools          @relation("fk_accumulation_transfers_accumulation_pool_id", fields: [accumulation_pool_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_source_draw_event_id         DrawEvents                 @relation("fk_accumulation_transfers_source_draw_event_id", fields: [source_draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_target_draw_event_id         DrawEvents?                @relation("fk_accumulation_transfers_target_draw_event_id", fields: [target_draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_assign_ledger_transaction_id LedgerTransactions?        @relation("fk_accumulation_transfers_assign_ledger_transaction_id", fields: [assign_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_return_ledger_transaction_id LedgerTransactions?        @relation("fk_accumulation_transfers_return_ledger_transaction_id", fields: [return_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([accumulation_pool_id, status], map: "ix_accumulation_transfers_accumulation_pool_id_status")
+  @@index([target_draw_event_id], map: "ix_accumulation_transfers_target_draw_event_id")
+  @@map("accumulation_transfers")
+}
+
+/// Trazabilidad semántica de movimientos.
+model FundMovements {
+  id                        String             @id @db.Uuid
+  fund_type                 String             @db.VarChar(50)
+  fund_reference_id         String             @db.Uuid
+  movement_type             String             @db.VarChar(80)
+  amount_virtual_minor      BigInt
+  ledger_transaction_id     String             @unique @db.Uuid
+  draw_event_id             String?            @db.Uuid
+  actor_user_id             String?            @db.Uuid
+  reason                    String             @db.Text
+  created_at                DateTime           @default(now()) @db.Timestamptz(6)
+  rel_ledger_transaction_id LedgerTransactions @relation("fk_fund_movements_ledger_transaction_id", fields: [ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_draw_event_id         DrawEvents?        @relation("fk_fund_movements_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_actor_user_id         Users?             @relation("fk_fund_movements_actor_user_id", fields: [actor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([fund_type, fund_reference_id, created_at], map: "ix_fund_movements_fund_type_fund_reference_id_created_at")
+  @@map("fund_movements")
+}
+
+/// Fondo VIRTUAL para premios futuros.
+model FuturePrizeFund {
+  id                    String         @id @db.Uuid
+  code                  String         @unique @db.VarChar(50)
+  ledger_account_id     String         @unique @db.Uuid
+  is_active             Boolean
+  created_at            DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_ledger_account_id LedgerAccounts @relation("fk_future_prize_fund_ledger_account_id", fields: [ledger_account_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("future_prize_fund")
+}
+
+/// Metadatos del fondo general.
+model GuaranteeFund {
+  id                                                String                      @id @db.Uuid
+  code                                              String                      @unique @db.VarChar(50)
+  currency                                          CurrencyCode
+  ledger_account_id                                 String                      @unique @db.Uuid
+  base_emergency_minor                              BigInt
+  is_active                                         Boolean
+  created_at                                        DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                                        DateTime                    @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_ledger_account_id                             LedgerAccounts              @relation("fk_guarantee_fund_ledger_account_id", fields: [ledger_account_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_guarantee_fund_reservations_guarantee_fund_id GuaranteeFundReservations[] @relation("fk_guarantee_fund_reservations_guarantee_fund_id")
+
+  @@map("guarantee_fund")
+}
+
+/// Cobertura bloqueada por evento.
+model GuaranteeFundReservations {
+  id                                    String                @id @db.Uuid
+  guarantee_fund_id                     String                @db.Uuid
+  draw_event_id                         String                @unique @db.Uuid
+  reserved_ledger_account_id            String                @unique @db.Uuid
+  amount_virtual_minor                  BigInt
+  status                                FundReservationStatus
+  reservation_ledger_transaction_id     String?               @unique @db.Uuid
+  settlement_ledger_transaction_id      String?               @unique @db.Uuid
+  reserved_at                           DateTime?             @db.Timestamptz(6)
+  settled_at                            DateTime?             @db.Timestamptz(6)
+  created_at                            DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime              @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_guarantee_fund_id                 GuaranteeFund         @relation("fk_guarantee_fund_reservations_guarantee_fund_id", fields: [guarantee_fund_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_draw_event_id                     DrawEvents            @relation("fk_guarantee_fund_reservations_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_reserved_ledger_account_id        LedgerAccounts        @relation("fk_guarantee_fund_reservations_reserved_ledger_account_id", fields: [reserved_ledger_account_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_reservation_ledger_transaction_id LedgerTransactions?   @relation("fk_guarantee_fund_reservations_reservation_ledger_transaction_id", fields: [reservation_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_settlement_ledger_transaction_id  LedgerTransactions?   @relation("fk_guarantee_fund_reservations_settlement_ledger_transaction_id", fields: [settlement_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([status], map: "ix_guarantee_fund_reservations_status")
+  @@map("guarantee_fund_reservations")
+}
+
+/// Dispositivos conocidos y metadatos de seguridad.
+model Devices {
+  id                           String          @id @db.Uuid
+  user_id                      String          @db.Uuid
+  device_public_id             String          @db.VarChar(100)
+  platform                     String          @db.VarChar(30)
+  display_name                 String?         @db.VarChar(120)
+  trusted_at                   DateTime?       @db.Timestamptz(6)
+  last_seen_at                 DateTime?       @db.Timestamptz(6)
+  revoked_at                   DateTime?       @db.Timestamptz(6)
+  created_at                   DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                   DateTime        @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_id                  Users           @relation("fk_devices_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_login_attempts_device_id LoginAttempts[] @relation("fk_login_attempts_device_id")
+  rev_sessions_device_id       Sessions[]      @relation("fk_sessions_device_id")
+
+  @@unique([user_id, device_public_id], map: "uq_devices_user_id_device_public_id")
+  @@map("devices")
+}
+
+/// Intentos de autenticación y señales de abuso.
+model LoginAttempts {
+  id              String   @id @db.Uuid
+  user_id         String?  @db.Uuid
+  identifier_hash String   @db.VarChar(128)
+  ip_hash         String?  @db.VarChar(128)
+  device_id       String?  @db.Uuid
+  succeeded       Boolean
+  failure_code    String?  @db.VarChar(80)
+  occurred_at     DateTime @db.Timestamptz(6)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  rel_user_id     Users?   @relation("fk_login_attempts_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_device_id   Devices? @relation("fk_login_attempts_device_id", fields: [device_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("login_attempts")
+}
+
+/// Recuperación de contraseña de un uso.
+model PasswordResets {
+  id                String    @id @db.Uuid
+  user_id           String    @db.Uuid
+  token_hash        String    @unique @db.VarChar(255)
+  expires_at        DateTime  @db.Timestamptz(6)
+  used_at           DateTime? @db.Timestamptz(6)
+  requested_ip_hash String?   @db.VarChar(128)
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  rel_user_id       Users     @relation("fk_password_resets_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("password_resets")
+}
+
+/// Catálogo estable de acciones autorizables.
+model Permissions {
+  id                                       String                 @id @db.Uuid
+  permission_key                           String                 @unique @db.VarChar(150)
+  resource_type                            String                 @db.VarChar(80)
+  action                                   String                 @db.VarChar(80)
+  description                              String                 @db.Text
+  is_sensitive                             Boolean
+  is_active                                Boolean
+  created_at                               DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime               @default(now()) @updatedAt @db.Timestamptz(6)
+  rev_role_permissions_permission_id       RolePermissions[]      @relation("fk_role_permissions_permission_id")
+  rev_user_permission_grants_permission_id UserPermissionGrants[] @relation("fk_user_permission_grants_permission_id")
+
+  @@map("permissions")
+}
+
+/// Tokens rotatorios almacenados mediante hash.
+model RefreshTokens {
+  id                                 String          @id @db.Uuid
+  session_id                         String          @db.Uuid
+  token_hash                         String          @unique @db.VarChar(255)
+  family_id                          String          @db.Uuid
+  rotated_from_id                    String?         @db.Uuid
+  expires_at                         DateTime        @db.Timestamptz(6)
+  used_at                            DateTime?       @db.Timestamptz(6)
+  revoked_at                         DateTime?       @db.Timestamptz(6)
+  created_at                         DateTime        @default(now()) @db.Timestamptz(6)
+  rel_session_id                     Sessions        @relation("fk_refresh_tokens_session_id", fields: [session_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_rotated_from_id                RefreshTokens?  @relation("fk_refresh_tokens_rotated_from_id", fields: [rotated_from_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_refresh_tokens_rotated_from_id RefreshTokens[] @relation("fk_refresh_tokens_rotated_from_id")
+
+  @@index([session_id], map: "ix_refresh_tokens_session_id")
+  @@index([family_id], map: "ix_refresh_tokens_family_id")
+  @@map("refresh_tokens")
+}
+
+/// Permisos predeterminados por rol.
+model RolePermissions {
+  id                     String      @id @db.Uuid
+  role_id                String      @db.Uuid
+  permission_id          String      @db.Uuid
+  granted_by_user_id     String?     @db.Uuid
+  granted_at             DateTime    @db.Timestamptz(6)
+  created_at             DateTime    @default(now()) @db.Timestamptz(6)
+  rel_role_id            Roles       @relation("fk_role_permissions_role_id", fields: [role_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_permission_id      Permissions @relation("fk_role_permissions_permission_id", fields: [permission_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_granted_by_user_id Users?      @relation("fk_role_permissions_granted_by_user_id", fields: [granted_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([role_id, permission_id], map: "uq_role_permissions_role_id_permission_id")
+  @@map("role_permissions")
+}
+
+/// Catálogo de roles globales.
+model Roles {
+  id                           String            @id @db.Uuid
+  code                         String            @unique @db.VarChar(40)
+  name                         String            @db.VarChar(100)
+  description                  String?           @db.Text
+  is_system                    Boolean
+  is_active                    Boolean
+  created_at                   DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at                   DateTime          @default(now()) @updatedAt @db.Timestamptz(6)
+  rev_role_permissions_role_id RolePermissions[] @relation("fk_role_permissions_role_id")
+  rev_user_roles_role_id       UserRoles[]       @relation("fk_user_roles_role_id")
+
+  @@map("roles")
+}
+
+/// Sesiones activas y modo.
+model Sessions {
+  id                               String             @id @db.Uuid
+  user_id                          String             @db.Uuid
+  device_id                        String?            @db.Uuid
+  status                           SessionStatus
+  active_mode                      ActiveMode
+  ip_hash                          String?            @db.VarChar(128)
+  user_agent_hash                  String?            @db.VarChar(128)
+  last_seen_at                     DateTime?          @db.Timestamptz(6)
+  expires_at                       DateTime           @db.Timestamptz(6)
+  revoked_at                       DateTime?          @db.Timestamptz(6)
+  created_at                       DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                       DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_id                      Users              @relation("fk_sessions_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_device_id                    Devices?           @relation("fk_sessions_device_id", fields: [device_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_refresh_tokens_session_id    RefreshTokens[]    @relation("fk_refresh_tokens_session_id")
+  rev_terms_acceptances_session_id TermsAcceptances[] @relation("fk_terms_acceptances_session_id")
+  rev_audit_events_session_id      AuditEvents[]      @relation("fk_audit_events_session_id")
+  rev_security_events_session_id   SecurityEvents[]   @relation("fk_security_events_session_id")
+
+  @@index([user_id, status], map: "ix_sessions_user_id_status")
+  @@index([expires_at], map: "ix_sessions_expires_at")
+  @@map("sessions")
+}
+
+/// Aceptación trazable de una versión.
+model TermsAcceptances {
+  id                   String        @id @db.Uuid
+  user_id              String        @db.Uuid
+  terms_version_id     String        @db.Uuid
+  session_id           String?       @db.Uuid
+  accepted_at          DateTime      @db.Timestamptz(6)
+  ip_hash              String?       @db.VarChar(128)
+  created_at           DateTime      @default(now()) @db.Timestamptz(6)
+  rel_user_id          Users         @relation("fk_terms_acceptances_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_terms_version_id TermsVersions @relation("fk_terms_acceptances_terms_version_id", fields: [terms_version_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_session_id       Sessions?     @relation("fk_terms_acceptances_session_id", fields: [session_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([user_id, terms_version_id], map: "uq_terms_acceptances_user_id_terms_version_id")
+  @@map("terms_acceptances")
+}
+
+/// Versiones inmutables de términos y privacidad.
+model TermsVersions {
+  id                                     String             @id @db.Uuid
+  document_type                          String             @db.VarChar(40)
+  version                                String             @db.VarChar(30)
+  content_hash                           String             @db.VarChar(128)
+  stored_object_id                       String?            @db.Uuid
+  effective_at                           DateTime           @db.Timestamptz(6)
+  retired_at                             DateTime?          @db.Timestamptz(6)
+  created_at                             DateTime           @default(now()) @db.Timestamptz(6)
+  rel_stored_object_id                   StoredObjects?     @relation("fk_terms_versions_stored_object_id", fields: [stored_object_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_terms_acceptances_terms_version_id TermsAcceptances[] @relation("fk_terms_acceptances_terms_version_id")
+
+  @@unique([document_type, version], map: "uq_terms_versions_document_type_version")
+  @@map("terms_versions")
+}
+
+/// Concesiones granulares directas para administradores.
+model UserPermissionGrants {
+  id                     String      @id @db.Uuid
+  user_id                String      @db.Uuid
+  permission_id          String      @db.Uuid
+  granted_by_user_id     String      @db.Uuid
+  valid_from             DateTime    @db.Timestamptz(6)
+  valid_until            DateTime?   @db.Timestamptz(6)
+  revoked_at             DateTime?   @db.Timestamptz(6)
+  reason                 String      @db.Text
+  created_at             DateTime    @default(now()) @db.Timestamptz(6)
+  rel_user_id            Users       @relation("fk_user_permission_grants_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_permission_id      Permissions @relation("fk_user_permission_grants_permission_id", fields: [permission_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_granted_by_user_id Users       @relation("fk_user_permission_grants_granted_by_user_id", fields: [granted_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([user_id, valid_from], map: "ix_user_permission_grants_user_id_valid_from")
+  @@map("user_permission_grants")
+}
+
+/// Datos personales y contacto separados de credenciales.
+model UserProfiles {
+  id                        String   @id @db.Uuid
+  user_id                   String   @unique @db.Uuid
+  first_name                String   @db.VarChar(100)
+  last_name                 String   @db.VarChar(100)
+  document_type             String   @db.VarChar(30)
+  document_number_hash      String   @unique @db.VarChar(128)
+  document_number_encrypted Bytes    @db.ByteA
+  birth_date                DateTime @db.Date
+  phone_e164                String?  @unique @db.VarChar(20)
+  address_text              String?  @db.Text
+  country_code              String   @db.Char(2)
+  timezone                  String   @db.VarChar(64)
+  created_at                DateTime @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_id               Users    @relation("fk_user_profiles_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("user_profiles")
+}
+
+/// Roles asignados con vigencia y revocación.
+model UserRoles {
+  id                      String    @id @db.Uuid
+  user_id                 String    @db.Uuid
+  role_id                 String    @db.Uuid
+  assigned_by_user_id     String?   @db.Uuid
+  valid_from              DateTime  @db.Timestamptz(6)
+  valid_until             DateTime? @db.Timestamptz(6)
+  revoked_at              DateTime? @db.Timestamptz(6)
+  reason                  String?   @db.Text
+  created_at              DateTime  @default(now()) @db.Timestamptz(6)
+  rel_user_id             Users     @relation("fk_user_roles_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_role_id             Roles     @relation("fk_user_roles_role_id", fields: [role_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_assigned_by_user_id Users?    @relation("fk_user_roles_assigned_by_user_id", fields: [assigned_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([user_id, valid_from], map: "ix_user_roles_user_id_valid_from")
+  @@map("user_roles")
+}
+
+/// Cuenta principal, credenciales de referencia y estado.
+model Users {
+  id                                                  String                        @id @db.Uuid
+  public_id                                           String                        @unique @db.VarChar(32)
+  email                                               String                        @unique @db.Citext
+  username                                            String                        @unique @db.Citext
+  password_hash                                       String                        @db.Text
+  status                                              AccountStatus
+  email_verified_at                                   DateTime?                     @db.Timestamptz(6)
+  phone_verified_at                                   DateTime?                     @db.Timestamptz(6)
+  deactivated_at                                      DateTime?                     @db.Timestamptz(6)
+  created_at                                          DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                                          DateTime                      @default(now()) @updatedAt @db.Timestamptz(6)
+  rev_combination_reservations_user_id                CombinationReservations[]     @relation("fk_combination_reservations_user_id")
+  rev_purchase_orders_user_id                         PurchaseOrders[]              @relation("fk_purchase_orders_user_id")
+  rev_purchase_sessions_user_id                       PurchaseSessions[]            @relation("fk_purchase_sessions_user_id")
+  rev_shopping_carts_user_id                          ShoppingCarts[]               @relation("fk_shopping_carts_user_id")
+  rev_ticket_status_history_actor_user_id             TicketStatusHistory[]         @relation("fk_ticket_status_history_actor_user_id")
+  rev_tickets_user_id                                 Tickets[]                     @relation("fk_tickets_user_id")
+  rev_idempotency_keys_subject_user_id                IdempotencyKeys[]             @relation("fk_idempotency_keys_subject_user_id")
+  rev_ledger_accounts_user_id                         LedgerAccounts[]              @relation("fk_ledger_accounts_user_id")
+  rev_real_topups_user_id                             RealTopups[]                  @relation("fk_real_topups_user_id")
+  rev_virtual_to_real_conversions_user_id             VirtualToRealConversions[]    @relation("fk_virtual_to_real_conversions_user_id")
+  rev_virtual_transfers_sender_user_id                VirtualTransfers[]            @relation("fk_virtual_transfers_sender_user_id")
+  rev_virtual_transfers_recipient_user_id             VirtualTransfers[]            @relation("fk_virtual_transfers_recipient_user_id")
+  rev_wallets_user_id                                 Wallets[]                     @relation("fk_wallets_user_id")
+  rev_withdrawal_requests_user_id                     WithdrawalRequests[]          @relation("fk_withdrawal_requests_user_id")
+  rev_withdrawal_requests_reviewed_by_user_id         WithdrawalRequests[]          @relation("fk_withdrawal_requests_reviewed_by_user_id")
+  rev_fund_movements_actor_user_id                    FundMovements[]               @relation("fk_fund_movements_actor_user_id")
+  rev_devices_user_id                                 Devices[]                     @relation("fk_devices_user_id")
+  rev_login_attempts_user_id                          LoginAttempts[]               @relation("fk_login_attempts_user_id")
+  rev_password_resets_user_id                         PasswordResets[]              @relation("fk_password_resets_user_id")
+  rev_role_permissions_granted_by_user_id             RolePermissions[]             @relation("fk_role_permissions_granted_by_user_id")
+  rev_sessions_user_id                                Sessions[]                    @relation("fk_sessions_user_id")
+  rev_terms_acceptances_user_id                       TermsAcceptances[]            @relation("fk_terms_acceptances_user_id")
+  rev_user_permission_grants_user_id                  UserPermissionGrants[]        @relation("fk_user_permission_grants_user_id")
+  rev_user_permission_grants_granted_by_user_id       UserPermissionGrants[]        @relation("fk_user_permission_grants_granted_by_user_id")
+  rev_user_profiles_user_id                           UserProfiles?                 @relation("fk_user_profiles_user_id")
+  rev_user_roles_user_id                              UserRoles[]                   @relation("fk_user_roles_user_id")
+  rev_user_roles_assigned_by_user_id                  UserRoles[]                   @relation("fk_user_roles_assigned_by_user_id")
+  rev_verification_tokens_user_id                     VerificationTokens[]          @relation("fk_verification_tokens_user_id")
+  rev_draw_event_status_history_actor_user_id         DrawEventStatusHistory[]      @relation("fk_draw_event_status_history_actor_user_id")
+  rev_event_templates_created_by_user_id              EventTemplates[]              @relation("fk_event_templates_created_by_user_id")
+  rev_audit_events_actor_user_id                      AuditEvents[]                 @relation("fk_audit_events_actor_user_id")
+  rev_notification_preferences_user_id                NotificationPreferences[]     @relation("fk_notification_preferences_user_id")
+  rev_notifications_user_id                           Notifications[]               @relation("fk_notifications_user_id")
+  rev_security_events_user_id                         SecurityEvents[]              @relation("fk_security_events_user_id")
+  rev_security_events_resolved_by_user_id             SecurityEvents[]              @relation("fk_security_events_resolved_by_user_id")
+  rev_stored_objects_uploaded_by_user_id              StoredObjects[]               @relation("fk_stored_objects_uploaded_by_user_id")
+  rev_system_settings_updated_by_user_id              SystemSettings[]              @relation("fk_system_settings_updated_by_user_id")
+  rev_user_draw_access_code_events_actor_user_id      UserDrawAccessCodeEvents[]    @relation("fk_user_draw_access_code_events_actor_user_id")
+  rev_user_draw_access_codes_funder_user_id           UserDrawAccessCodes[]         @relation("fk_user_draw_access_codes_funder_user_id")
+  rev_user_draw_access_codes_claimed_by_user_id       UserDrawAccessCodes[]         @relation("fk_user_draw_access_codes_claimed_by_user_id")
+  rev_user_draw_announcements_author_user_id          UserDrawAnnouncements[]       @relation("fk_user_draw_announcements_author_user_id")
+  rev_user_draw_claim_events_actor_user_id            UserDrawClaimEvents[]         @relation("fk_user_draw_claim_events_actor_user_id")
+  rev_user_draw_claim_evidence_submitted_by_user_id   UserDrawClaimEvidence[]       @relation("fk_user_draw_claim_evidence_submitted_by_user_id")
+  rev_user_draw_claims_claimant_user_id               UserDrawClaims[]              @relation("fk_user_draw_claims_claimant_user_id")
+  rev_user_draw_claims_resolved_by_user_id            UserDrawClaims[]              @relation("fk_user_draw_claims_resolved_by_user_id")
+  rev_user_draw_delivery_records_winner_user_id       UserDrawDeliveryRecords[]     @relation("fk_user_draw_delivery_records_winner_user_id")
+  rev_user_draw_escrow_events_actor_user_id           UserDrawEscrowEvents[]        @relation("fk_user_draw_escrow_events_actor_user_id")
+  rev_user_draw_invitations_invited_user_id           UserDrawInvitations[]         @relation("fk_user_draw_invitations_invited_user_id")
+  rev_user_draw_invitations_accepted_by_user_id       UserDrawInvitations[]         @relation("fk_user_draw_invitations_accepted_by_user_id")
+  rev_user_draw_number_changes_requested_by_user_id   UserDrawNumberChanges[]       @relation("fk_user_draw_number_changes_requested_by_user_id")
+  rev_user_draw_participation_events_actor_user_id    UserDrawParticipationEvents[] @relation("fk_user_draw_participation_events_actor_user_id")
+  rev_user_draw_participations_participant_user_id    UserDrawParticipations[]      @relation("fk_user_draw_participations_participant_user_id")
+  rev_user_draw_prize_evidence_submitted_by_user_id   UserDrawPrizeEvidence[]       @relation("fk_user_draw_prize_evidence_submitted_by_user_id")
+  rev_user_draw_prize_evidence_verified_by_user_id    UserDrawPrizeEvidence[]       @relation("fk_user_draw_prize_evidence_verified_by_user_id")
+  rev_user_draw_status_history_actor_user_id          UserDrawStatusHistory[]       @relation("fk_user_draw_status_history_actor_user_id")
+  rev_user_draws_organizer_user_id                    UserDraws[]                   @relation("fk_user_draws_organizer_user_id")
+  rev_conversion_assignments_vendor_user_id           ConversionAssignments[]       @relation("fk_conversion_assignments_vendor_user_id")
+  rev_conversion_request_events_actor_user_id         ConversionRequestEvents[]     @relation("fk_conversion_request_events_actor_user_id")
+  rev_conversion_requests_client_user_id              ConversionRequests[]          @relation("fk_conversion_requests_client_user_id")
+  rev_conversion_requests_completed_by_vendor_user_id ConversionRequests[]          @relation("fk_conversion_requests_completed_by_vendor_user_id")
+  rev_related_account_flags_user_a_id                 RelatedAccountFlags[]         @relation("fk_related_account_flags_user_a_id")
+  rev_related_account_flags_user_b_id                 RelatedAccountFlags[]         @relation("fk_related_account_flags_user_b_id")
+  rev_related_account_flags_resolved_by_user_id       RelatedAccountFlags[]         @relation("fk_related_account_flags_resolved_by_user_id")
+  rev_vendor_inventory_batches_vendor_user_id         VendorInventoryBatches[]      @relation("fk_vendor_inventory_batches_vendor_user_id")
+  rev_vendor_profiles_user_id                         VendorProfiles?               @relation("fk_vendor_profiles_user_id")
+  rev_vendor_profiles_approved_by_user_id             VendorProfiles[]              @relation("fk_vendor_profiles_approved_by_user_id")
+  rev_vendor_purchase_orders_vendor_user_id           VendorPurchaseOrders[]        @relation("fk_vendor_purchase_orders_vendor_user_id")
+  rev_vendor_sales_vendor_user_id                     VendorSales[]                 @relation("fk_vendor_sales_vendor_user_id")
+
+  @@map("users")
+}
+
+/// Verificación de correo/teléfono.
+model VerificationTokens {
+  id          String              @id @db.Uuid
+  user_id     String              @db.Uuid
+  channel     VerificationChannel
+  purpose     VerificationPurpose
+  target_hash String              @db.VarChar(255)
+  token_hash  String              @unique @db.VarChar(255)
+  expires_at  DateTime            @db.Timestamptz(6)
+  consumed_at DateTime?           @db.Timestamptz(6)
+  created_at  DateTime            @default(now()) @db.Timestamptz(6)
+  rel_user_id Users               @relation("fk_verification_tokens_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("verification_tokens")
+}
+
+/// Símbolos de la combinación para búsqueda parcial.
+model CombinationNumbers {
+  id                    String            @id @db.Uuid
+  combination_id        String            @db.Uuid
+  draw_event_id         String            @db.Uuid
+  symbol                String            @db.VarChar(2)
+  sort_order            Int               @db.SmallInt
+  created_at            DateTime          @default(now()) @db.Timestamptz(6)
+  rel_combination_id    EventCombinations @relation("fk_combination_numbers_combination_id", fields: [combination_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_draw_event_id     DrawEvents        @relation("fk_combination_numbers_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_combination_event EventCombinations @relation("fk_combination_numbers_combination_event", fields: [combination_id, draw_event_id], references: [id, draw_event_id], onDelete: Restrict, onUpdate: Cascade, map: "fk_combination_numbers_combination_event")
+
+  @@unique([combination_id, symbol], map: "uq_combination_numbers_combination_id_symbol")
+  @@unique([combination_id, sort_order], map: "uq_combination_numbers_combination_id_sort_order")
+  @@index([draw_event_id, symbol, combination_id], map: "ix_combination_numbers_draw_event_id_symbol_combination_id")
+  @@map("combination_numbers")
+}
+
+/// Historial append-only del evento.
+model DrawEventStatusHistory {
+  id                String           @id @db.Uuid
+  draw_event_id     String           @db.Uuid
+  from_status       DrawEventStatus?
+  to_status         DrawEventStatus
+  transition_code   String           @db.VarChar(80)
+  actor_type        ActorType
+  actor_user_id     String?          @db.Uuid
+  reason            String?          @db.Text
+  correlation_id    String           @db.Uuid
+  occurred_at       DateTime         @db.Timestamptz(6)
+  created_at        DateTime         @default(now()) @db.Timestamptz(6)
+  rel_draw_event_id DrawEvents       @relation("fk_draw_event_status_history_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_actor_user_id Users?           @relation("fk_draw_event_status_history_actor_user_id", fields: [actor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([draw_event_id, occurred_at], map: "ix_draw_event_status_history_draw_event_id_occurred_at")
+  @@map("draw_event_status_history")
+}
+
+/// Evento oficial concreto.
+model DrawEvents {
+  id                                              String                     @id @db.Uuid
+  public_id                                       String                     @unique @db.VarChar(40)
+  lottery_product_id                              String                     @db.Uuid
+  rule_version_id                                 String                     @db.Uuid
+  prize_rule_version_id                           String                     @db.Uuid
+  event_template_id                               String?                    @db.Uuid
+  scheduled_slot_at                               DateTime?                  @db.Timestamptz(6)
+  status                                          DrawEventStatus
+  sales_open_at                                   DateTime                   @db.Timestamptz(6)
+  sales_close_at                                  DateTime                   @db.Timestamptz(6)
+  draw_at                                         DateTime                   @db.Timestamptz(6)
+  limit_release_at                                DateTime                   @db.Timestamptz(6)
+  published_at                                    DateTime?                  @db.Timestamptz(6)
+  cancelled_at                                    DateTime?                  @db.Timestamptz(6)
+  cancel_reason                                   String?                    @db.Text
+  finalized_at                                    DateTime?                  @db.Timestamptz(6)
+  created_at                                      DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                                      DateTime                   @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_lottery_product_id                          LotteryProducts            @relation("fk_draw_events_lottery_product_id", fields: [lottery_product_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_rule_version_id                             RuleVersions               @relation("fk_draw_events_rule_version_id", fields: [rule_version_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_prize_rule_version_id                       PrizeRuleVersions          @relation("fk_draw_events_prize_rule_version_id", fields: [prize_rule_version_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_event_template_id                           EventTemplates?            @relation("fk_draw_events_event_template_id", fields: [event_template_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_combination_reservations_draw_event_id      CombinationReservations[]  @relation("fk_combination_reservations_draw_event_id")
+  rev_purchase_orders_draw_event_id               PurchaseOrders[]           @relation("fk_purchase_orders_draw_event_id")
+  rev_purchase_sessions_draw_event_id             PurchaseSessions[]         @relation("fk_purchase_sessions_draw_event_id")
+  rev_shopping_carts_draw_event_id                ShoppingCarts[]            @relation("fk_shopping_carts_draw_event_id")
+  rev_tickets_draw_event_id                       Tickets[]                  @relation("fk_tickets_draw_event_id")
+  rev_tickets_event_rule                          Tickets[]                  @relation("fk_ticket_event_rule")
+  rev_ledger_accounts_draw_event_id               LedgerAccounts[]           @relation("fk_ledger_accounts_draw_event_id")
+  rev_accumulation_transfers_source_draw_event_id AccumulationTransfers[]    @relation("fk_accumulation_transfers_source_draw_event_id")
+  rev_accumulation_transfers_target_draw_event_id AccumulationTransfers[]    @relation("fk_accumulation_transfers_target_draw_event_id")
+  rev_fund_movements_draw_event_id                FundMovements[]            @relation("fk_fund_movements_draw_event_id")
+  rev_guarantee_fund_reservations_draw_event_id   GuaranteeFundReservations? @relation("fk_guarantee_fund_reservations_draw_event_id")
+  rev_combination_numbers_draw_event_id           CombinationNumbers[]       @relation("fk_combination_numbers_draw_event_id")
+  rev_draw_event_status_history_draw_event_id     DrawEventStatusHistory[]   @relation("fk_draw_event_status_history_draw_event_id")
+  rev_event_combinations_draw_event_id            EventCombinations[]        @relation("fk_event_combinations_draw_event_id")
+  rev_event_financial_configs_draw_event_id       EventFinancialConfigs?     @relation("fk_event_financial_configs_draw_event_id")
+  rev_event_financial_projections_draw_event_id   EventFinancialProjections? @relation("fk_event_financial_projections_draw_event_id")
+  rev_draw_commitments_draw_event_id              DrawCommitments?           @relation("fk_draw_commitments_draw_event_id")
+  rev_draw_results_draw_event_id                  DrawResults?               @relation("fk_draw_results_draw_event_id")
+  rev_draw_snapshots_draw_event_id                DrawSnapshots?             @relation("fk_draw_snapshots_draw_event_id")
+  rev_prize_awards_draw_event_id                  PrizeAwards[]              @relation("fk_prize_awards_draw_event_id")
+  rev_result_reports_draw_event_id                ResultReports[]            @relation("fk_result_reports_draw_event_id")
+  rev_ticket_evaluations_draw_event_id            TicketEvaluations[]        @relation("fk_ticket_evaluations_draw_event_id")
+
+  @@unique([event_template_id, scheduled_slot_at], map: "uq_draw_events_event_template_id_scheduled_slot_at")
+  @@unique([id, rule_version_id], map: "uq_draw_event_rule")
+  @@index([lottery_product_id, status, sales_open_at, sales_close_at], map: "ix_draw_events_lottery_product_id_status_sales_open__d2c0965c29")
+  @@map("draw_events")
+}
+
+/// Catálogo único de combinaciones.
+model EventCombinations {
+  id                                             String                    @id @db.Uuid
+  draw_event_id                                  String                    @db.Uuid
+  normalized_key                                 String                    @db.VarChar(80)
+  status                                         CombinationStatus
+  blocked_reason                                 String?                   @db.Text
+  blocked_at                                     DateTime?                 @db.Timestamptz(6)
+  created_at                                     DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime                  @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_draw_event_id                              DrawEvents                @relation("fk_event_combinations_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_cart_items_combination_id                  CartItems[]               @relation("fk_cart_items_combination_id")
+  rev_combination_reservations_combination_id    CombinationReservations[] @relation("fk_combination_reservations_combination_id")
+  rev_combination_reservations_combination_event CombinationReservations[] @relation("fk_reservation_combination_event")
+  rev_tickets_combination_id                     Tickets?                  @relation("fk_tickets_combination_id")
+  rev_tickets_combination_event                  Tickets[]                 @relation("fk_ticket_combination_event")
+  rev_combination_numbers_combination_id         CombinationNumbers[]      @relation("fk_combination_numbers_combination_id")
+  rev_combination_numbers_combination_event      CombinationNumbers[]      @relation("fk_combination_numbers_combination_event")
+
+  @@unique([draw_event_id, normalized_key], map: "uq_event_combinations_draw_event_id_normalized_key")
+  @@unique([id, draw_event_id], map: "uq_event_combination_id_event")
+  @@index([draw_event_id, status, normalized_key], map: "ix_event_combinations_draw_event_id_status_normalized_key")
+  @@map("event_combinations")
+}
+
+/// Configuración económica congelada por evento.
+model EventFinancialConfigs {
+  id                                String     @id @db.Uuid
+  draw_event_id                     String     @unique @db.Uuid
+  ticket_price_virtual_minor        BigInt
+  initial_major_prize_virtual_minor BigInt
+  major_prize_ceiling_virtual_minor BigInt
+  minimum_capital_virtual_minor     BigInt
+  guarantee_required_virtual_minor  BigInt
+  rounding_policy_snapshot          Json       @db.JsonB
+  frozen_at                         DateTime?  @db.Timestamptz(6)
+  created_at                        DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime   @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_draw_event_id                 DrawEvents @relation("fk_event_financial_configs_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("event_financial_configs")
+}
+
+/// Proyección reconstruible de ventas y premio.
+model EventFinancialProjections {
+  id                                String     @id @db.Uuid
+  draw_event_id                     String     @unique @db.Uuid
+  sales_virtual_minor               BigInt
+  refund_liability_virtual_minor    BigInt
+  guarantee_recovery_pending_minor  BigInt
+  growth_virtual_minor              BigInt
+  accumulation_extra_virtual_minor  BigInt
+  current_major_prize_virtual_minor BigInt
+  ledger_version                    BigInt
+  calculated_at                     DateTime   @db.Timestamptz(6)
+  created_at                        DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime   @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_draw_event_id                 DrawEvents @relation("fk_event_financial_projections_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("event_financial_projections")
+}
+
+/// Autogeneradores de eventos.
+model EventTemplates {
+  id                                       String              @id @db.Uuid
+  lottery_product_id                       String              @db.Uuid
+  rule_version_id                          String              @db.Uuid
+  prize_rule_version_id                    String              @db.Uuid
+  name                                     String              @db.VarChar(120)
+  status                                   TemplateStatus
+  future_generation_days                   Int
+  publication_lead_seconds                 Int
+  created_by_user_id                       String              @db.Uuid
+  retired_at                               DateTime?           @db.Timestamptz(6)
+  created_at                               DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_lottery_product_id                   LotteryProducts     @relation("fk_event_templates_lottery_product_id", fields: [lottery_product_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_rule_version_id                      RuleVersions        @relation("fk_event_templates_rule_version_id", fields: [rule_version_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_prize_rule_version_id                PrizeRuleVersions   @relation("fk_event_templates_prize_rule_version_id", fields: [prize_rule_version_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_created_by_user_id                   Users               @relation("fk_event_templates_created_by_user_id", fields: [created_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_draw_events_event_template_id        DrawEvents[]        @relation("fk_draw_events_event_template_id")
+  rev_template_schedules_event_template_id TemplateSchedules[] @relation("fk_template_schedules_event_template_id")
+
+  @@map("event_templates")
+}
+
+/// Productos Octal, Decimal y Hexadecimal.
+model LotteryProducts {
+  id                                        String             @id @db.Uuid
+  code                                      LotteryProductCode @unique
+  name                                      String             @db.VarChar(100)
+  description                               String?            @db.Text
+  is_active                                 Boolean
+  created_at                                DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
+  rev_accumulation_pools_lottery_product_id AccumulationPools? @relation("fk_accumulation_pools_lottery_product_id")
+  rev_draw_events_lottery_product_id        DrawEvents[]       @relation("fk_draw_events_lottery_product_id")
+  rev_event_templates_lottery_product_id    EventTemplates[]   @relation("fk_event_templates_lottery_product_id")
+  rev_rule_versions_lottery_product_id      RuleVersions[]     @relation("fk_rule_versions_lottery_product_id")
+
+  @@map("lottery_products")
+}
+
+/// Reglas económicas inmutables.
+model PrizeRuleVersions {
+  id                                        String           @id @db.Uuid
+  rule_version_id                           String           @db.Uuid
+  version                                   Int
+  status                                    VersionStatus
+  initial_prize_multiplier_bps              Int
+  growth_share_bps                          Int
+  operations_share_bps                      Int
+  no_winner_accumulation_bps                Int
+  no_winner_guarantee_bps                   Int
+  no_winner_future_prize_bps                Int
+  no_winner_operations_bps                  Int
+  rounding_policy                           Json             @db.JsonB
+  allocation_policy_code                    String           @db.VarChar(60)
+  content_hash                              String           @db.VarChar(128)
+  published_at                              DateTime?        @db.Timestamptz(6)
+  created_at                                DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_rule_version_id                       RuleVersions     @relation("fk_prize_rule_versions_rule_version_id", fields: [rule_version_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_draw_events_prize_rule_version_id     DrawEvents[]     @relation("fk_draw_events_prize_rule_version_id")
+  rev_event_templates_prize_rule_version_id EventTemplates[] @relation("fk_event_templates_prize_rule_version_id")
+
+  @@unique([rule_version_id, version], map: "uq_prize_rule_versions_rule_version_id_version")
+  @@map("prize_rule_versions")
+}
+
+/// Reglas matemáticas históricas por producto.
+model RuleVersions {
+  id                                      String               @id @db.Uuid
+  lottery_product_id                      String               @db.Uuid
+  version                                 Int
+  status                                  VersionStatus
+  selection_count                         Int                  @db.SmallInt
+  universe_symbols                        Json                 @db.JsonB
+  total_combinations                      Int
+  order_matters                           Boolean
+  unique_symbols_required                 Boolean
+  purchase_limit_bps                      Int
+  limit_release_fraction_bps              Int
+  reservation_seconds                     Int
+  close_before_draw_seconds               Int
+  published_at                            DateTime?            @db.Timestamptz(6)
+  content_hash                            String               @db.VarChar(128)
+  created_at                              DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime             @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_lottery_product_id                  LotteryProducts      @relation("fk_rule_versions_lottery_product_id", fields: [lottery_product_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_tickets_rule_version_id             Tickets[]            @relation("fk_tickets_rule_version_id")
+  rev_ledger_transactions_rule_version_id LedgerTransactions[] @relation("fk_ledger_transactions_rule_version_id")
+  rev_draw_events_rule_version_id         DrawEvents[]         @relation("fk_draw_events_rule_version_id")
+  rev_event_templates_rule_version_id     EventTemplates[]     @relation("fk_event_templates_rule_version_id")
+  rev_prize_rule_versions_rule_version_id PrizeRuleVersions[]  @relation("fk_prize_rule_versions_rule_version_id")
+
+  @@unique([lottery_product_id, version], map: "uq_rule_versions_lottery_product_id_version")
+  @@map("rule_versions")
+}
+
+/// Horarios, días y recurrencias.
+model TemplateSchedules {
+  id                    String         @id @db.Uuid
+  event_template_id     String         @db.Uuid
+  weekday               Int?           @db.SmallInt
+  local_time            DateTime?      @db.Time(6)
+  interval_seconds      Int?
+  effective_from        DateTime       @db.Date
+  effective_until       DateTime?      @db.Date
+  is_active             Boolean
+  created_at            DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_event_template_id EventTemplates @relation("fk_template_schedules_event_template_id", fields: [event_template_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("template_schedules")
+}
+
+/// Orden idempotente de acreditación.
+model AwardPaymentOrders {
+  id                        String              @id @db.Uuid
+  prize_award_id            String              @unique @db.Uuid
+  status                    AwardPaymentStatus
+  ledger_transaction_id     String?             @unique @db.Uuid
+  idempotency_key_id        String              @db.Uuid
+  attempt_count             Int
+  credited_at               DateTime?           @db.Timestamptz(6)
+  last_error                String?             @db.Text
+  created_at                DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_prize_award_id        PrizeAwards         @relation("fk_award_payment_orders_prize_award_id", fields: [prize_award_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_ledger_transaction_id LedgerTransactions? @relation("fk_award_payment_orders_ledger_transaction_id", fields: [ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_idempotency_key_id    IdempotencyKeys     @relation("fk_award_payment_orders_idempotency_key_id", fields: [idempotency_key_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([status, updated_at], map: "ix_award_payment_orders_status_updated_at")
+  @@map("award_payment_orders")
+}
+
+/// Commitment y semilla cifrada.
+model DrawCommitments {
+  id                                  String           @id @db.Uuid
+  draw_event_id                       String           @unique @db.Uuid
+  status                              CommitmentStatus
+  algorithm_version                   String           @db.VarChar(50)
+  commitment_hash                     String           @unique @db.VarChar(128)
+  encrypted_secret_seed               Bytes            @db.ByteA
+  encryption_key_version              String           @db.VarChar(50)
+  published_at                        DateTime?        @db.Timestamptz(6)
+  revealed_seed                       String?          @db.Text
+  revealed_at                         DateTime?        @db.Timestamptz(6)
+  created_at                          DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                          DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_draw_event_id                   DrawEvents       @relation("fk_draw_commitments_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_draw_results_draw_commitment_id DrawResults?     @relation("fk_draw_results_draw_commitment_id")
+
+  @@index([status], map: "ix_draw_commitments_status")
+  @@map("draw_commitments")
+}
+
+/// Símbolos ganadores y orden visual.
+model DrawResultNumbers {
+  id                 String      @id @db.Uuid
+  draw_result_id     String      @db.Uuid
+  symbol             String      @db.VarChar(2)
+  display_order      Int         @db.SmallInt
+  created_at         DateTime    @default(now()) @db.Timestamptz(6)
+  rel_draw_result_id DrawResults @relation("fk_draw_result_numbers_draw_result_id", fields: [draw_result_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([draw_result_id, symbol], map: "uq_draw_result_numbers_draw_result_id_symbol")
+  @@unique([draw_result_id, display_order], map: "uq_draw_result_numbers_draw_result_id_display_order")
+  @@map("draw_result_numbers")
+}
+
+/// Resultado único e inmutable.
+model DrawResults {
+  id                                     String              @id @db.Uuid
+  draw_event_id                          String              @unique @db.Uuid
+  draw_commitment_id                     String              @unique @db.Uuid
+  draw_snapshot_id                       String              @unique @db.Uuid
+  algorithm_version                      String              @db.VarChar(50)
+  final_seed_hash                        String              @db.VarChar(128)
+  result_hash                            String              @unique @db.VarChar(128)
+  fixed_at                               DateTime            @db.Timestamptz(6)
+  fixed_by_job_run_id                    String?             @db.Uuid
+  created_at                             DateTime            @default(now()) @db.Timestamptz(6)
+  rel_draw_event_id                      DrawEvents          @relation("fk_draw_results_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_draw_commitment_id                 DrawCommitments     @relation("fk_draw_results_draw_commitment_id", fields: [draw_commitment_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_draw_snapshot_id                   DrawSnapshots       @relation("fk_draw_results_draw_snapshot_id", fields: [draw_snapshot_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_fixed_by_job_run_id                JobRuns?            @relation("fk_draw_results_fixed_by_job_run_id", fields: [fixed_by_job_run_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_draw_result_numbers_draw_result_id DrawResultNumbers[] @relation("fk_draw_result_numbers_draw_result_id")
+  rev_result_reports_draw_result_id      ResultReports[]     @relation("fk_result_reports_draw_result_id")
+  rev_ticket_evaluations_draw_result_id  TicketEvaluations[] @relation("fk_ticket_evaluations_draw_result_id")
+  rev_ticket_evaluations_result_event    TicketEvaluations[] @relation("fk_evaluation_result_event")
+
+  @@unique([id, draw_event_id], map: "uq_draw_result_event")
+  @@map("draw_results")
+}
+
+/// Contenido relacional del snapshot.
+model DrawSnapshotTickets {
+  id                   String        @id @db.Uuid
+  draw_snapshot_id     String        @db.Uuid
+  ticket_id            String        @db.Uuid
+  sequence             Int
+  ticket_hash          String        @db.VarChar(128)
+  created_at           DateTime      @default(now()) @db.Timestamptz(6)
+  rel_draw_snapshot_id DrawSnapshots @relation("fk_draw_snapshot_tickets_draw_snapshot_id", fields: [draw_snapshot_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_ticket_id        Tickets       @relation("fk_draw_snapshot_tickets_ticket_id", fields: [ticket_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([draw_snapshot_id, ticket_id], map: "uq_draw_snapshot_tickets_draw_snapshot_id_ticket_id")
+  @@unique([draw_snapshot_id, sequence], map: "uq_draw_snapshot_tickets_draw_snapshot_id_sequence")
+  @@map("draw_snapshot_tickets")
+}
+
+/// Snapshot de boletos elegibles.
+model DrawSnapshots {
+  id                                         String                @id @db.Uuid
+  draw_event_id                              String                @unique @db.Uuid
+  status                                     SnapshotStatus
+  snapshot_hash                              String?               @unique @db.VarChar(128)
+  ticket_count                               Int
+  serialization_version                      String                @db.VarChar(40)
+  generated_at                               DateTime?             @db.Timestamptz(6)
+  created_at                                 DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime              @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_draw_event_id                          DrawEvents            @relation("fk_draw_snapshots_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_draw_results_draw_snapshot_id          DrawResults?          @relation("fk_draw_results_draw_snapshot_id")
+  rev_draw_snapshot_tickets_draw_snapshot_id DrawSnapshotTickets[] @relation("fk_draw_snapshot_tickets_draw_snapshot_id")
+
+  @@index([status], map: "ix_draw_snapshots_status")
+  @@map("draw_snapshots")
+}
+
+/// Obligación calculada por boleto y categoría.
+model PrizeAwards {
+  id                                      String              @id @db.Uuid
+  draw_event_id                           String              @db.Uuid
+  ticket_id                               String              @db.Uuid
+  ticket_evaluation_id                    String?             @db.Uuid
+  award_category                          AwardCategory
+  exact_virtual_minor                     BigInt
+  public_virtual_minor                    BigInt
+  rounding_adjustment_minor               BigInt
+  calculated_at                           DateTime            @db.Timestamptz(6)
+  created_at                              DateTime            @default(now()) @db.Timestamptz(6)
+  rel_draw_event_id                       DrawEvents          @relation("fk_prize_awards_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_ticket_id                           Tickets             @relation("fk_prize_awards_ticket_id", fields: [ticket_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_ticket_evaluation_id                TicketEvaluations?  @relation("fk_prize_awards_ticket_evaluation_id", fields: [ticket_evaluation_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_award_payment_orders_prize_award_id AwardPaymentOrders? @relation("fk_award_payment_orders_prize_award_id")
+
+  @@unique([draw_event_id, ticket_id, award_category], map: "uq_prize_awards_draw_event_id_ticket_id_award_category")
+  @@map("prize_awards")
+}
+
+/// Boletín público estructurado.
+model ResultReports {
+  id                                      String          @id @db.Uuid
+  draw_event_id                           String          @db.Uuid
+  draw_result_id                          String          @db.Uuid
+  status                                  ReportStatus
+  report_version                          Int
+  supersedes_report_id                    String?         @db.Uuid
+  public_payload                          Json            @db.JsonB
+  report_hash                             String          @unique @db.VarChar(128)
+  json_object_id                          String?         @db.Uuid
+  pdf_object_id                           String?         @db.Uuid
+  image_object_id                         String?         @db.Uuid
+  published_at                            DateTime?       @db.Timestamptz(6)
+  superseded_at                           DateTime?       @db.Timestamptz(6)
+  created_at                              DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime        @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_draw_event_id                       DrawEvents      @relation("fk_result_reports_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_draw_result_id                      DrawResults     @relation("fk_result_reports_draw_result_id", fields: [draw_result_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_supersedes_report_id                ResultReports?  @relation("fk_result_reports_supersedes_report_id", fields: [supersedes_report_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_json_object_id                      StoredObjects?  @relation("fk_result_reports_json_object_id", fields: [json_object_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_pdf_object_id                       StoredObjects?  @relation("fk_result_reports_pdf_object_id", fields: [pdf_object_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_image_object_id                     StoredObjects?  @relation("fk_result_reports_image_object_id", fields: [image_object_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_result_reports_supersedes_report_id ResultReports[] @relation("fk_result_reports_supersedes_report_id")
+
+  @@unique([draw_event_id, report_version], map: "uq_result_reports_draw_event_id_report_version")
+  @@index([status, published_at], map: "ix_result_reports_status_published_at")
+  @@map("result_reports")
+}
+
+/// Evaluación inmutable por boleto.
+model TicketEvaluations {
+  id                                    String                 @id @db.Uuid
+  draw_event_id                         String                 @db.Uuid
+  ticket_id                             String                 @unique @db.Uuid
+  draw_result_id                        String                 @db.Uuid
+  match_count                           Int                    @db.SmallInt
+  evaluation_category                   TicketEvaluationStatus
+  evaluation_hash                       String                 @db.VarChar(128)
+  evaluated_at                          DateTime               @db.Timestamptz(6)
+  created_at                            DateTime               @default(now()) @db.Timestamptz(6)
+  rel_draw_event_id                     DrawEvents             @relation("fk_ticket_evaluations_draw_event_id", fields: [draw_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_ticket_id                         Tickets                @relation("fk_ticket_evaluations_ticket_id", fields: [ticket_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_ticket_event                      Tickets                @relation("fk_evaluation_ticket_event", fields: [ticket_id, draw_event_id], references: [id, draw_event_id], onDelete: Restrict, onUpdate: Cascade, map: "fk_evaluation_ticket_event")
+  rel_draw_result_id                    DrawResults            @relation("fk_ticket_evaluations_draw_result_id", fields: [draw_result_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_result_event                      DrawResults            @relation("fk_evaluation_result_event", fields: [draw_result_id, draw_event_id], references: [id, draw_event_id], onDelete: Restrict, onUpdate: Cascade, map: "fk_evaluation_result_event")
+  rev_prize_awards_ticket_evaluation_id PrizeAwards[]          @relation("fk_prize_awards_ticket_evaluation_id")
+
+  @@unique([draw_event_id, ticket_id], map: "uq_ticket_evaluations_draw_event_id_ticket_id")
+  @@map("ticket_evaluations")
+}
+
+/// Auditoría administrativa, financiera y de seguridad.
+model AuditEvents {
+  id                String      @id @db.Uuid
+  actor_type        ActorType
+  actor_user_id     String?     @db.Uuid
+  session_id        String?     @db.Uuid
+  active_mode       ActiveMode?
+  permission_key    String?     @db.VarChar(150)
+  action            String      @db.VarChar(120)
+  resource_type     String      @db.VarChar(80)
+  resource_id       String?     @db.Uuid
+  before_data       Json?       @db.JsonB
+  after_data        Json?       @db.JsonB
+  reason            String?     @db.Text
+  correlation_id    String      @db.Uuid
+  ip_hash           String?     @db.VarChar(128)
+  occurred_at       DateTime    @db.Timestamptz(6)
+  created_at        DateTime    @default(now()) @db.Timestamptz(6)
+  rel_actor_user_id Users?      @relation("fk_audit_events_actor_user_id", fields: [actor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_session_id    Sessions?   @relation("fk_audit_events_session_id", fields: [session_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([actor_user_id, occurred_at], map: "ix_audit_events_actor_user_id_occurred_at")
+  @@index([resource_type, resource_id], map: "ix_audit_events_resource_type_resource_id")
+  @@map("audit_events")
+}
+
+/// Deduplicación de mensajes consumidos.
+model InboxEvents {
+  id            String      @id @db.Uuid
+  consumer_name String      @db.VarChar(100)
+  message_id    String      @db.VarChar(180)
+  event_type    String      @db.VarChar(120)
+  payload_hash  String      @db.VarChar(128)
+  status        InboxStatus
+  received_at   DateTime    @db.Timestamptz(6)
+  processed_at  DateTime?   @db.Timestamptz(6)
+  last_error    String?     @db.Text
+  created_at    DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime    @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@unique([consumer_name, message_id], map: "uq_inbox_events_consumer_name_message_id")
+  @@map("inbox_events")
+}
+
+/// Intentos de ejecución.
+model JobRuns {
+  id                                        String            @id @db.Uuid
+  scheduled_job_id                          String            @db.Uuid
+  attempt_number                            Int
+  status                                    JobStatus
+  worker_instance                           String?           @db.VarChar(120)
+  started_at                                DateTime          @db.Timestamptz(6)
+  finished_at                               DateTime?         @db.Timestamptz(6)
+  result_payload                            Json?             @db.JsonB
+  error_code                                String?           @db.VarChar(100)
+  error_detail                              String?           @db.Text
+  created_at                                DateTime          @default(now()) @db.Timestamptz(6)
+  rel_scheduled_job_id                      ScheduledJobs     @relation("fk_job_runs_scheduled_job_id", fields: [scheduled_job_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_draw_results_fixed_by_job_run_id      DrawResults[]     @relation("fk_draw_results_fixed_by_job_run_id")
+  rev_user_draw_results_fixed_by_job_run_id UserDrawResults[] @relation("fk_user_draw_results_fixed_by_job_run_id")
+
+  @@unique([scheduled_job_id, attempt_number], map: "uq_job_runs_scheduled_job_id_attempt_number")
+  @@index([status, started_at], map: "ix_job_runs_status_started_at")
+  @@map("job_runs")
+}
+
+/// Preferencias por usuario, tipo y canal.
+model NotificationPreferences {
+  id                String   @id @db.Uuid
+  user_id           String   @db.Uuid
+  notification_type String   @db.VarChar(100)
+  channel           String   @db.VarChar(30)
+  is_enabled        Boolean
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_id       Users    @relation("fk_notification_preferences_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([user_id, notification_type, channel], map: "uq_notification_preferences_user_id_notification_type_channel")
+  @@map("notification_preferences")
+}
+
+/// Avisos opcionales.
+model Notifications {
+  id                String             @id @db.Uuid
+  user_id           String             @db.Uuid
+  channel           String             @db.VarChar(30)
+  notification_type String             @db.VarChar(100)
+  status            NotificationStatus
+  title             String             @db.VarChar(180)
+  body              String             @db.Text
+  resource_type     String?            @db.VarChar(80)
+  resource_id       String?            @db.Uuid
+  scheduled_at      DateTime           @db.Timestamptz(6)
+  sent_at           DateTime?          @db.Timestamptz(6)
+  read_at           DateTime?          @db.Timestamptz(6)
+  created_at        DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_id       Users              @relation("fk_notifications_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([user_id, status, created_at], map: "ix_notifications_user_id_status_created_at")
+  @@map("notifications")
+}
+
+/// Eventos de dominio posteriores al commit.
+model OutboxEvents {
+  id             String       @id @db.Uuid
+  aggregate_type String       @db.VarChar(80)
+  aggregate_id   String       @db.Uuid
+  event_type     String       @db.VarChar(120)
+  event_version  Int
+  payload        Json         @db.JsonB
+  status         OutboxStatus
+  correlation_id String       @db.Uuid
+  available_at   DateTime     @db.Timestamptz(6)
+  published_at   DateTime?    @db.Timestamptz(6)
+  attempt_count  Int
+  created_at     DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime     @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([status, available_at], map: "ix_outbox_events_status_available_at")
+  @@map("outbox_events")
+}
+
+/// Trabajos persistentes.
+model ScheduledJobs {
+  id                            String    @id @db.Uuid
+  job_key                       String    @unique @db.VarChar(180)
+  job_type                      String    @db.VarChar(120)
+  resource_type                 String    @db.VarChar(80)
+  resource_id                   String    @db.Uuid
+  status                        JobStatus
+  run_at                        DateTime  @db.Timestamptz(6)
+  payload                       Json      @db.JsonB
+  max_attempts                  Int
+  attempt_count                 Int
+  correlation_id                String    @db.Uuid
+  last_error                    String?   @db.Text
+  created_at                    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  rev_job_runs_scheduled_job_id JobRuns[] @relation("fk_job_runs_scheduled_job_id")
+
+  @@index([status, run_at], map: "ix_scheduled_jobs_status_run_at")
+  @@map("scheduled_jobs")
+}
+
+/// Alertas y patrones de riesgo.
+model SecurityEvents {
+  id                      String           @id @db.Uuid
+  event_type              String           @db.VarChar(100)
+  severity                SecuritySeverity
+  user_id                 String?          @db.Uuid
+  session_id              String?          @db.Uuid
+  resource_type           String?          @db.VarChar(80)
+  resource_id             String?          @db.Uuid
+  details                 Json             @db.JsonB
+  detected_at             DateTime         @db.Timestamptz(6)
+  resolved_at             DateTime?        @db.Timestamptz(6)
+  resolved_by_user_id     String?          @db.Uuid
+  created_at              DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_id             Users?           @relation("fk_security_events_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_session_id          Sessions?        @relation("fk_security_events_session_id", fields: [session_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_resolved_by_user_id Users?           @relation("fk_security_events_resolved_by_user_id", fields: [resolved_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([severity, detected_at], map: "ix_security_events_severity_detected_at")
+  @@index([user_id, detected_at], map: "ix_security_events_user_id_detected_at")
+  @@map("security_events")
+}
+
+/// Metadatos de archivos S3 compatibles.
+model StoredObjects {
+  id                                                         String                    @id @db.Uuid
+  bucket                                                     String                    @db.VarChar(100)
+  object_key                                                 String                    @db.VarChar(500)
+  content_type                                               String                    @db.VarChar(120)
+  size_bytes                                                 BigInt
+  sha256                                                     String                    @db.VarChar(128)
+  status                                                     StoredObjectStatus
+  encryption_key_version                                     String?                   @db.VarChar(50)
+  uploaded_by_user_id                                        String?                   @db.Uuid
+  available_at                                               DateTime?                 @db.Timestamptz(6)
+  deleted_at                                                 DateTime?                 @db.Timestamptz(6)
+  created_at                                                 DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at                                                 DateTime                  @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_uploaded_by_user_id                                    Users?                    @relation("fk_stored_objects_uploaded_by_user_id", fields: [uploaded_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_terms_versions_stored_object_id                        TermsVersions[]           @relation("fk_terms_versions_stored_object_id")
+  rev_result_reports_json_object_id                          ResultReports[]           @relation("fk_result_reports_json_object_id")
+  rev_result_reports_pdf_object_id                           ResultReports[]           @relation("fk_result_reports_pdf_object_id")
+  rev_result_reports_image_object_id                         ResultReports[]           @relation("fk_result_reports_image_object_id")
+  rev_user_draw_claim_evidence_stored_object_id              UserDrawClaimEvidence[]   @relation("fk_user_draw_claim_evidence_stored_object_id")
+  rev_user_draw_delivery_records_delivery_evidence_object_id UserDrawDeliveryRecords[] @relation("fk_user_draw_delivery_records_delivery_evidence_object_id")
+  rev_user_draw_prize_evidence_stored_object_id              UserDrawPrizeEvidence[]   @relation("fk_user_draw_prize_evidence_stored_object_id")
+
+  @@unique([bucket, object_key], map: "uq_stored_objects_bucket_object_key")
+  @@map("stored_objects")
+}
+
+/// Configuración operativa no histórica.
+model SystemSettings {
+  id                     String   @id @db.Uuid
+  setting_key            String   @unique @db.VarChar(150)
+  value_json             Json     @db.JsonB
+  value_type             String   @db.VarChar(30)
+  is_sensitive           Boolean
+  updated_by_user_id     String?  @db.Uuid
+  description            String?  @db.Text
+  created_at             DateTime @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_updated_by_user_id Users?   @relation("fk_system_settings_updated_by_user_id", fields: [updated_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("system_settings")
+}
+
+/// Historial de uso, pago y reserva del código.
+model UserDrawAccessCodeEvents {
+  id                 String              @id @db.Uuid
+  access_code_id     String              @db.Uuid
+  dimension          String              @db.VarChar(30)
+  from_status        String?             @db.VarChar(40)
+  to_status          String              @db.VarChar(40)
+  actor_type         ActorType
+  actor_user_id      String?             @db.Uuid
+  correlation_id     String              @db.Uuid
+  occurred_at        DateTime            @db.Timestamptz(6)
+  created_at         DateTime            @default(now()) @db.Timestamptz(6)
+  rel_access_code_id UserDrawAccessCodes @relation("fk_user_draw_access_code_events_access_code_id", fields: [access_code_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_actor_user_id  Users?              @relation("fk_user_draw_access_code_events_actor_user_id", fields: [actor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([access_code_id, occurred_at], map: "ix_user_draw_access_code_events_access_code_id_occurred_at")
+  @@map("user_draw_access_code_events")
+}
+
+/// Números reservados por un código.
+model UserDrawAccessCodeNumbers {
+  id                 String              @id @db.Uuid
+  access_code_id     String              @db.Uuid
+  number_id          String              @db.Uuid
+  created_at         DateTime            @default(now()) @db.Timestamptz(6)
+  rel_access_code_id UserDrawAccessCodes @relation("fk_user_draw_access_code_numbers_access_code_id", fields: [access_code_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_number_id      UserDrawNumbers     @relation("fk_user_draw_access_code_numbers_number_id", fields: [number_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([access_code_id, number_id], map: "uq_user_draw_access_code_numbers_access_code_id_number_id")
+  @@map("user_draw_access_code_numbers")
+}
+
+/// Código privado de un uso.
+model UserDrawAccessCodes {
+  id                                               String                      @id @db.Uuid
+  user_draw_id                                     String                      @db.Uuid
+  code_public_id                                   String                      @unique @db.VarChar(50)
+  secret_hash                                      String                      @unique @db.VarChar(255)
+  use_status                                       CodeUseStatus
+  payment_status                                   CodePaymentStatus
+  reservation_status                               CodeReservationStatus
+  price_virtual_minor                              BigInt
+  funder_user_id                                   String?                     @db.Uuid
+  claimed_by_user_id                               String?                     @db.Uuid
+  optional_comment                                 String?                     @db.Text
+  expires_at                                       DateTime                    @db.Timestamptz(6)
+  claimed_at                                       DateTime?                   @db.Timestamptz(6)
+  payment_ledger_transaction_id                    String?                     @unique @db.Uuid
+  refund_ledger_transaction_id                     String?                     @unique @db.Uuid
+  created_at                                       DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime                    @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_draw_id                                 UserDraws                   @relation("fk_user_draw_access_codes_user_draw_id", fields: [user_draw_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_funder_user_id                               Users?                      @relation("fk_user_draw_access_codes_funder_user_id", fields: [funder_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_claimed_by_user_id                           Users?                      @relation("fk_user_draw_access_codes_claimed_by_user_id", fields: [claimed_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_payment_ledger_transaction_id                LedgerTransactions?         @relation("fk_user_draw_access_codes_payment_ledger_transaction_id", fields: [payment_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_refund_ledger_transaction_id                 LedgerTransactions?         @relation("fk_user_draw_access_codes_refund_ledger_transaction_id", fields: [refund_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_user_draw_access_code_events_access_code_id  UserDrawAccessCodeEvents[]  @relation("fk_user_draw_access_code_events_access_code_id")
+  rev_user_draw_access_code_numbers_access_code_id UserDrawAccessCodeNumbers[] @relation("fk_user_draw_access_code_numbers_access_code_id")
+  rev_user_draw_participations_access_code_id      UserDrawParticipations[]    @relation("fk_user_draw_participations_access_code_id")
+
+  @@unique([id, user_draw_id], map: "uq_user_draw_code_id_draw")
+  @@index([user_draw_id, use_status, expires_at], map: "ix_user_draw_access_codes_user_draw_id_use_status_expires_at")
+  @@map("user_draw_access_codes")
+}
+
+/// Anuncios internos.
+model UserDrawAnnouncements {
+  id                 String    @id @db.Uuid
+  user_draw_id       String    @db.Uuid
+  author_user_id     String    @db.Uuid
+  title              String    @db.VarChar(160)
+  body               String    @db.Text
+  published_at       DateTime  @db.Timestamptz(6)
+  removed_at         DateTime? @db.Timestamptz(6)
+  created_at         DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_draw_id   UserDraws @relation("fk_user_draw_announcements_user_draw_id", fields: [user_draw_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_author_user_id Users     @relation("fk_user_draw_announcements_author_user_id", fields: [author_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([user_draw_id, published_at], map: "ix_user_draw_announcements_user_draw_id_published_at")
+  @@map("user_draw_announcements")
+}
+
+/// Historial del reclamo.
+model UserDrawClaimEvents {
+  id                   String         @id @db.Uuid
+  claim_id             String         @db.Uuid
+  from_status          ClaimStatus?
+  to_status            ClaimStatus
+  actor_user_id        String?        @db.Uuid
+  actor_type           ActorType
+  reason               String?        @db.Text
+  evidence_deadline_at DateTime?      @db.Timestamptz(6)
+  correlation_id       String         @db.Uuid
+  occurred_at          DateTime       @db.Timestamptz(6)
+  created_at           DateTime       @default(now()) @db.Timestamptz(6)
+  rel_claim_id         UserDrawClaims @relation("fk_user_draw_claim_events_claim_id", fields: [claim_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_actor_user_id    Users?         @relation("fk_user_draw_claim_events_actor_user_id", fields: [actor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([claim_id, occurred_at], map: "ix_user_draw_claim_events_claim_id_occurred_at")
+  @@map("user_draw_claim_events")
+}
+
+/// Evidencia de reclamo.
+model UserDrawClaimEvidence {
+  id                       String         @id @db.Uuid
+  claim_id                 String         @db.Uuid
+  submitted_by_user_id     String         @db.Uuid
+  stored_object_id         String?        @db.Uuid
+  description              String?        @db.Text
+  submitted_at             DateTime       @db.Timestamptz(6)
+  created_at               DateTime       @default(now()) @db.Timestamptz(6)
+  rel_claim_id             UserDrawClaims @relation("fk_user_draw_claim_evidence_claim_id", fields: [claim_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_submitted_by_user_id Users          @relation("fk_user_draw_claim_evidence_submitted_by_user_id", fields: [submitted_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_stored_object_id     StoredObjects? @relation("fk_user_draw_claim_evidence_stored_object_id", fields: [stored_object_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([claim_id, submitted_at], map: "ix_user_draw_claim_evidence_claim_id_submitted_at")
+  @@map("user_draw_claim_evidence")
+}
+
+/// Reclamo administrativo.
+model UserDrawClaims {
+  id                                     String                  @id @db.Uuid
+  public_id                              String                  @unique @db.VarChar(40)
+  user_draw_id                           String                  @db.Uuid
+  claimant_user_id                       String                  @db.Uuid
+  participation_id                       String?                 @db.Uuid
+  claim_type                             UserDrawClaimType
+  status                                 ClaimStatus
+  description                            String                  @db.Text
+  event_occurred_at                      DateTime                @db.Timestamptz(6)
+  filed_at                               DateTime                @db.Timestamptz(6)
+  appeal_deadline_at                     DateTime?               @db.Timestamptz(6)
+  resolved_by_user_id                    String?                 @db.Uuid
+  resolution_code                        String?                 @db.VarChar(80)
+  resolution_reason                      String?                 @db.Text
+  compensation_ledger_transaction_id     String?                 @unique @db.Uuid
+  resolved_at                            DateTime?               @db.Timestamptz(6)
+  closed_at                              DateTime?               @db.Timestamptz(6)
+  created_at                             DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime                @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_draw_id                       UserDraws               @relation("fk_user_draw_claims_user_draw_id", fields: [user_draw_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_claimant_user_id                   Users                   @relation("fk_user_draw_claims_claimant_user_id", fields: [claimant_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_participation_id                   UserDrawParticipations? @relation("fk_user_draw_claims_participation_id", fields: [participation_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_resolved_by_user_id                Users?                  @relation("fk_user_draw_claims_resolved_by_user_id", fields: [resolved_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_compensation_ledger_transaction_id LedgerTransactions?     @relation("fk_user_draw_claims_compensation_ledger_transaction_id", fields: [compensation_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_user_draw_claim_events_claim_id    UserDrawClaimEvents[]   @relation("fk_user_draw_claim_events_claim_id")
+  rev_user_draw_claim_evidence_claim_id  UserDrawClaimEvidence[] @relation("fk_user_draw_claim_evidence_claim_id")
+
+  @@index([user_draw_id, status], map: "ix_user_draw_claims_user_draw_id_status")
+  @@map("user_draw_claims")
+}
+
+/// Evidencia y confirmación de entrega.
+model UserDrawDeliveryRecords {
+  id                              String         @id @db.Uuid
+  user_draw_id                    String         @unique @db.Uuid
+  winner_user_id                  String         @db.Uuid
+  status                          DeliveryStatus
+  delivery_method                 String         @db.VarChar(80)
+  delivery_deadline_at            DateTime       @db.Timestamptz(6)
+  organizer_notes                 String?        @db.Text
+  delivery_evidence_object_id     String?        @db.Uuid
+  registered_at                   DateTime?      @db.Timestamptz(6)
+  confirmed_at                    DateTime?      @db.Timestamptz(6)
+  closed_at                       DateTime?      @db.Timestamptz(6)
+  created_at                      DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_draw_id                UserDraws      @relation("fk_user_draw_delivery_records_user_draw_id", fields: [user_draw_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_winner_user_id              Users          @relation("fk_user_draw_delivery_records_winner_user_id", fields: [winner_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_delivery_evidence_object_id StoredObjects? @relation("fk_user_draw_delivery_records_delivery_evidence_object_id", fields: [delivery_evidence_object_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("user_draw_delivery_records")
+}
+
+/// Historial del escrow.
+model UserDrawEscrowEvents {
+  id                        String              @id @db.Uuid
+  user_draw_escrow_id       String              @db.Uuid
+  from_status               EscrowStatus?
+  to_status                 EscrowStatus
+  actor_type                ActorType
+  actor_user_id             String?             @db.Uuid
+  reason                    String?             @db.Text
+  ledger_transaction_id     String?             @db.Uuid
+  correlation_id            String              @db.Uuid
+  occurred_at               DateTime            @db.Timestamptz(6)
+  created_at                DateTime            @default(now()) @db.Timestamptz(6)
+  rel_user_draw_escrow_id   UserDrawEscrows     @relation("fk_user_draw_escrow_events_user_draw_escrow_id", fields: [user_draw_escrow_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_actor_user_id         Users?              @relation("fk_user_draw_escrow_events_actor_user_id", fields: [actor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_ledger_transaction_id LedgerTransactions? @relation("fk_user_draw_escrow_events_ledger_transaction_id", fields: [ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([user_draw_escrow_id, occurred_at], map: "ix_user_draw_escrow_events_user_draw_escrow_id_occurred_at")
+  @@map("user_draw_escrow_events")
+}
+
+/// Control del 95 % y comisión 5 % retenida.
+model UserDrawEscrows {
+  id                                              String                 @id @db.Uuid
+  user_draw_id                                    String                 @unique @db.Uuid
+  status                                          EscrowStatus
+  escrow_ledger_account_id                        String                 @unique @db.Uuid
+  commission_held_account_id                      String                 @unique @db.Uuid
+  gross_paid_virtual_minor                        BigInt
+  commission_held_virtual_minor                   BigInt
+  escrow_virtual_minor                            BigInt
+  released_virtual_minor                          BigInt
+  refunded_virtual_minor                          BigInt
+  release_ledger_transaction_id                   String?                @unique @db.Uuid
+  settled_at                                      DateTime?              @db.Timestamptz(6)
+  created_at                                      DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                                      DateTime               @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_draw_id                                UserDraws              @relation("fk_user_draw_escrows_user_draw_id", fields: [user_draw_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_escrow_ledger_account_id                    LedgerAccounts         @relation("fk_user_draw_escrows_escrow_ledger_account_id", fields: [escrow_ledger_account_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_commission_held_account_id                  LedgerAccounts         @relation("fk_user_draw_escrows_commission_held_account_id", fields: [commission_held_account_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_release_ledger_transaction_id               LedgerTransactions?    @relation("fk_user_draw_escrows_release_ledger_transaction_id", fields: [release_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_user_draw_escrow_events_user_draw_escrow_id UserDrawEscrowEvents[] @relation("fk_user_draw_escrow_events_user_draw_escrow_id")
+
+  @@map("user_draw_escrows")
+}
+
+/// Invitaciones privadas alternativas al código.
+model UserDrawInvitations {
+  id                      String           @id @db.Uuid
+  user_draw_id            String           @db.Uuid
+  invited_user_id         String?          @db.Uuid
+  target_contact_hash     String?          @db.VarChar(255)
+  token_hash              String           @unique @db.VarChar(255)
+  status                  InvitationStatus
+  expires_at              DateTime         @db.Timestamptz(6)
+  accepted_by_user_id     String?          @db.Uuid
+  accepted_at             DateTime?        @db.Timestamptz(6)
+  created_at              DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_draw_id        UserDraws        @relation("fk_user_draw_invitations_user_draw_id", fields: [user_draw_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_invited_user_id     Users?           @relation("fk_user_draw_invitations_invited_user_id", fields: [invited_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_accepted_by_user_id Users?           @relation("fk_user_draw_invitations_accepted_by_user_id", fields: [accepted_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("user_draw_invitations")
+}
+
+/// Cambio atómico de número.
+model UserDrawNumberChanges {
+  id                              String                       @id @db.Uuid
+  participation_id                String                       @db.Uuid
+  old_participation_number_id     String                       @db.Uuid
+  new_number_id                   String                       @db.Uuid
+  requested_by_user_id            String                       @db.Uuid
+  status                          NumberChangeStatus
+  reason                          String?                      @db.Text
+  changed_at                      DateTime?                    @db.Timestamptz(6)
+  created_at                      DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime                     @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_participation_id            UserDrawParticipations       @relation("fk_user_draw_number_changes_participation_id", fields: [participation_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_old_participation_number_id UserDrawParticipationNumbers @relation("fk_user_draw_number_changes_old_participation_number_id", fields: [old_participation_number_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_new_number_id               UserDrawNumbers              @relation("fk_user_draw_number_changes_new_number_id", fields: [new_number_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_requested_by_user_id        Users                        @relation("fk_user_draw_number_changes_requested_by_user_id", fields: [requested_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([participation_id, created_at], map: "ix_user_draw_number_changes_participation_id_created_at")
+  @@map("user_draw_number_changes")
+}
+
+/// Números del rango y asignación.
+model UserDrawNumbers {
+  id                                            String                         @id @db.Uuid
+  user_draw_id                                  String                         @db.Uuid
+  number_value                                  Int
+  assignment_status                             NumberAssignmentStatus
+  blocked_reason                                String?                        @db.Text
+  created_at                                    DateTime                       @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime                       @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_draw_id                              UserDraws                      @relation("fk_user_draw_numbers_user_draw_id", fields: [user_draw_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_user_draw_access_code_numbers_number_id   UserDrawAccessCodeNumbers[]    @relation("fk_user_draw_access_code_numbers_number_id")
+  rev_user_draw_number_changes_new_number_id    UserDrawNumberChanges[]        @relation("fk_user_draw_number_changes_new_number_id")
+  rev_user_draw_participation_numbers_number_id UserDrawParticipationNumbers[] @relation("fk_user_draw_participation_numbers_number_id")
+
+  @@unique([user_draw_id, number_value], map: "uq_user_draw_numbers_user_draw_id_number_value")
+  @@unique([id, user_draw_id], map: "uq_user_draw_number_id_draw")
+  @@map("user_draw_numbers")
+}
+
+/// Historial de pago, relación, elegibilidad y número.
+model UserDrawParticipationEvents {
+  id                   String                 @id @db.Uuid
+  participation_id     String                 @db.Uuid
+  dimension            String                 @db.VarChar(30)
+  from_status          String?                @db.VarChar(50)
+  to_status            String                 @db.VarChar(50)
+  actor_type           ActorType
+  actor_user_id        String?                @db.Uuid
+  reason               String?                @db.Text
+  correlation_id       String                 @db.Uuid
+  occurred_at          DateTime               @db.Timestamptz(6)
+  created_at           DateTime               @default(now()) @db.Timestamptz(6)
+  rel_participation_id UserDrawParticipations @relation("fk_user_draw_participation_events_participation_id", fields: [participation_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_actor_user_id    Users?                 @relation("fk_user_draw_participation_events_actor_user_id", fields: [actor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([participation_id, occurred_at], map: "ix_user_draw_participation_events_participation_id_occurred_at")
+  @@map("user_draw_participation_events")
+}
+
+/// Unidad económica de compra o reclamación con estados separados; puede poseer una o varias asignaciones de número.
+model UserDrawParticipations {
+  id                                                   String                         @id @db.Uuid
+  user_draw_id                                         String                         @db.Uuid
+  participant_user_id                                  String                         @db.Uuid
+  access_code_id                                       String?                        @db.Uuid
+  payment_status                                       ParticipationPaymentStatus
+  relation_status                                      ParticipationRelationStatus
+  eligibility_status                                   ParticipationEligibilityStatus
+  price_virtual_minor                                  BigInt
+  payment_ledger_transaction_id                        String?                        @unique @db.Uuid
+  refund_ledger_transaction_id                         String?                        @unique @db.Uuid
+  paid_at                                              DateTime?                      @db.Timestamptz(6)
+  abandoned_at                                         DateTime?                      @db.Timestamptz(6)
+  expelled_at                                          DateTime?                      @db.Timestamptz(6)
+  expulsion_reason                                     String?                        @db.Text
+  created_at                                           DateTime                       @default(now()) @db.Timestamptz(6)
+  updated_at                                           DateTime                       @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_draw_id                                     UserDraws                      @relation("fk_user_draw_participations_user_draw_id", fields: [user_draw_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_participant_user_id                              Users                          @relation("fk_user_draw_participations_participant_user_id", fields: [participant_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_access_code_id                                   UserDrawAccessCodes?           @relation("fk_user_draw_participations_access_code_id", fields: [access_code_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_payment_ledger_transaction_id                    LedgerTransactions?            @relation("fk_user_draw_participations_payment_ledger_transaction_id", fields: [payment_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_refund_ledger_transaction_id                     LedgerTransactions?            @relation("fk_user_draw_participations_refund_ledger_transaction_id", fields: [refund_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_user_draw_claims_participation_id                UserDrawClaims[]               @relation("fk_user_draw_claims_participation_id")
+  rev_user_draw_number_changes_participation_id        UserDrawNumberChanges[]        @relation("fk_user_draw_number_changes_participation_id")
+  rev_user_draw_participation_events_participation_id  UserDrawParticipationEvents[]  @relation("fk_user_draw_participation_events_participation_id")
+  rev_user_draw_participation_numbers_participation_id UserDrawParticipationNumbers[] @relation("fk_user_draw_participation_numbers_participation_id")
+  rev_user_draw_results_winning_participation_id       UserDrawResults[]              @relation("fk_user_draw_results_winning_participation_id")
+
+  @@unique([id, user_draw_id], map: "uq_user_draw_participation_id_draw")
+  @@index([user_draw_id, payment_status, eligibility_status], map: "ix_user_draw_participations_user_draw_id_payment_sta_8f853f047b")
+  @@map("user_draw_participations")
+}
+
+/// Asignar uno o varios números a una participación económica sin duplicar su precio ni su pago.
+model UserDrawParticipationNumbers {
+  id                                                       String                    @id @db.Uuid
+  participation_id                                         String                    @db.Uuid
+  number_id                                                String                    @db.Uuid
+  status                                                   ParticipationNumberStatus
+  assigned_at                                              DateTime                  @db.Timestamptz(6)
+  replaced_at                                              DateTime?                 @db.Timestamptz(6)
+  released_at                                              DateTime?                 @db.Timestamptz(6)
+  reason                                                   String?                   @db.Text
+  created_at                                               DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at                                               DateTime                  @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_participation_id                                     UserDrawParticipations    @relation("fk_user_draw_participation_numbers_participation_id", fields: [participation_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_number_id                                            UserDrawNumbers           @relation("fk_user_draw_participation_numbers_number_id", fields: [number_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_user_draw_number_changes_old_participation_number_id UserDrawNumberChanges[]   @relation("fk_user_draw_number_changes_old_participation_number_id")
+  rev_user_draw_snapshot_entries_participation_number_id   UserDrawSnapshotEntries[] @relation("fk_user_draw_snapshot_entries_participation_number_id")
+
+  @@unique([participation_id, number_id], map: "uq_user_draw_participation_numbers_participation_id_number_id")
+  @@index([number_id, status], map: "ix_user_draw_participation_numbers_number_id_status")
+  @@map("user_draw_participation_numbers")
+}
+
+/// Evidencia de existencia/disponibilidad del premio.
+model UserDrawPrizeEvidence {
+  id                       String         @id @db.Uuid
+  user_draw_id             String         @db.Uuid
+  evidence_type            String         @db.VarChar(50)
+  stored_object_id         String?        @db.Uuid
+  description              String?        @db.Text
+  submitted_by_user_id     String         @db.Uuid
+  verified_by_user_id      String?        @db.Uuid
+  verified_at              DateTime?      @db.Timestamptz(6)
+  is_valid                 Boolean?
+  created_at               DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_draw_id         UserDraws      @relation("fk_user_draw_prize_evidence_user_draw_id", fields: [user_draw_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_stored_object_id     StoredObjects? @relation("fk_user_draw_prize_evidence_stored_object_id", fields: [stored_object_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_submitted_by_user_id Users          @relation("fk_user_draw_prize_evidence_submitted_by_user_id", fields: [submitted_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_verified_by_user_id  Users?         @relation("fk_user_draw_prize_evidence_verified_by_user_id", fields: [verified_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([user_draw_id], map: "ix_user_draw_prize_evidence_user_draw_id")
+  @@map("user_draw_prize_evidence")
+}
+
+/// Ganador único generado por CSPRNG.
+model UserDrawResults {
+  id                            String                  @id @db.Uuid
+  user_draw_id                  String                  @unique @db.Uuid
+  user_draw_snapshot_id         String                  @unique @db.Uuid
+  winning_snapshot_entry_id     String                  @unique @db.Uuid
+  winning_participation_id      String                  @db.Uuid
+  winning_number_value          Int
+  algorithm_version             String                  @db.VarChar(50)
+  verification_payload          Json                    @db.JsonB
+  result_hash                   String                  @unique @db.VarChar(128)
+  fixed_at                      DateTime                @db.Timestamptz(6)
+  fixed_by_job_run_id           String?                 @db.Uuid
+  created_at                    DateTime                @default(now()) @db.Timestamptz(6)
+  rel_user_draw_id              UserDraws               @relation("fk_user_draw_results_user_draw_id", fields: [user_draw_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_user_draw_snapshot_id     UserDrawSnapshots       @relation("fk_user_draw_results_user_draw_snapshot_id", fields: [user_draw_snapshot_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_winning_snapshot_entry_id UserDrawSnapshotEntries @relation("fk_user_draw_results_winning_snapshot_entry_id", fields: [winning_snapshot_entry_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_winning_participation_id  UserDrawParticipations  @relation("fk_user_draw_results_winning_participation_id", fields: [winning_participation_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_fixed_by_job_run_id       JobRuns?                @relation("fk_user_draw_results_fixed_by_job_run_id", fields: [fixed_by_job_run_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("user_draw_results")
+}
+
+/// Contenido del snapshot.
+model UserDrawSnapshotEntries {
+  id                                              String                       @id @db.Uuid
+  user_draw_snapshot_id                           String                       @db.Uuid
+  participation_number_id                         String                       @db.Uuid
+  number_value                                    Int
+  sequence                                        Int
+  entry_hash                                      String                       @db.VarChar(128)
+  created_at                                      DateTime                     @default(now()) @db.Timestamptz(6)
+  rel_user_draw_snapshot_id                       UserDrawSnapshots            @relation("fk_user_draw_snapshot_entries_user_draw_snapshot_id", fields: [user_draw_snapshot_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_participation_number_id                     UserDrawParticipationNumbers @relation("fk_user_draw_snapshot_entries_participation_number_id", fields: [participation_number_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_user_draw_results_winning_snapshot_entry_id UserDrawResults?             @relation("fk_user_draw_results_winning_snapshot_entry_id")
+
+  @@unique([user_draw_snapshot_id, participation_number_id], map: "uq_user_draw_snapshot_entries_user_draw_snapshot_id__db047fa5ec")
+  @@unique([user_draw_snapshot_id, sequence], map: "uq_user_draw_snapshot_entries_user_draw_snapshot_id_sequence")
+  @@map("user_draw_snapshot_entries")
+}
+
+/// Snapshot de participaciones PAGADO+ACTIVA.
+model UserDrawSnapshots {
+  id                                                   String                    @id @db.Uuid
+  user_draw_id                                         String                    @unique @db.Uuid
+  snapshot_hash                                        String                    @unique @db.VarChar(128)
+  entry_count                                          Int
+  serialization_version                                String                    @db.VarChar(40)
+  generated_at                                         DateTime                  @db.Timestamptz(6)
+  created_at                                           DateTime                  @default(now()) @db.Timestamptz(6)
+  rel_user_draw_id                                     UserDraws                 @relation("fk_user_draw_snapshots_user_draw_id", fields: [user_draw_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_user_draw_results_user_draw_snapshot_id          UserDrawResults?          @relation("fk_user_draw_results_user_draw_snapshot_id")
+  rev_user_draw_snapshot_entries_user_draw_snapshot_id UserDrawSnapshotEntries[] @relation("fk_user_draw_snapshot_entries_user_draw_snapshot_id")
+
+  @@unique([id, user_draw_id], map: "uq_user_draw_snapshot_id_draw")
+  @@map("user_draw_snapshots")
+}
+
+/// Historial del sorteo de usuario.
+model UserDrawStatusHistory {
+  id                String          @id @db.Uuid
+  user_draw_id      String          @db.Uuid
+  from_status       UserDrawStatus?
+  to_status         UserDrawStatus
+  transition_code   String          @db.VarChar(80)
+  actor_type        ActorType
+  actor_user_id     String?         @db.Uuid
+  reason            String?         @db.Text
+  correlation_id    String          @db.Uuid
+  occurred_at       DateTime        @db.Timestamptz(6)
+  created_at        DateTime        @default(now()) @db.Timestamptz(6)
+  rel_user_draw_id  UserDraws       @relation("fk_user_draw_status_history_user_draw_id", fields: [user_draw_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_actor_user_id Users?          @relation("fk_user_draw_status_history_actor_user_id", fields: [actor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([user_draw_id, occurred_at], map: "ix_user_draw_status_history_user_draw_id_occurred_at")
+  @@map("user_draw_status_history")
+}
+
+/// Sorteo creado por un Organizador contextual.
+model UserDraws {
+  id                                          String                   @id @db.Uuid
+  public_id                                   String                   @unique @db.VarChar(40)
+  organizer_user_id                           String                   @db.Uuid
+  visibility                                  UserDrawVisibility
+  status                                      UserDrawStatus
+  title                                       String                   @db.VarChar(160)
+  description                                 String?                  @db.Text
+  prize_description                           String                   @db.Text
+  price_virtual_minor                         BigInt
+  platform_commission_bps                     Int
+  allocation_policy_code                      String                   @db.VarChar(60)
+  range_start                                 Int
+  range_end                                   Int
+  sales_open_at                               DateTime                 @db.Timestamptz(6)
+  sales_close_at                              DateTime                 @db.Timestamptz(6)
+  first_payment_at                            DateTime?                @db.Timestamptz(6)
+  published_at                                DateTime?                @db.Timestamptz(6)
+  cancelled_at                                DateTime?                @db.Timestamptz(6)
+  finalized_at                                DateTime?                @db.Timestamptz(6)
+  created_at                                  DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime                 @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_organizer_user_id                       Users                    @relation("fk_user_draws_organizer_user_id", fields: [organizer_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_ledger_accounts_user_draw_id            LedgerAccounts[]         @relation("fk_ledger_accounts_user_draw_id")
+  rev_user_draw_access_codes_user_draw_id     UserDrawAccessCodes[]    @relation("fk_user_draw_access_codes_user_draw_id")
+  rev_user_draw_announcements_user_draw_id    UserDrawAnnouncements[]  @relation("fk_user_draw_announcements_user_draw_id")
+  rev_user_draw_claims_user_draw_id           UserDrawClaims[]         @relation("fk_user_draw_claims_user_draw_id")
+  rev_user_draw_delivery_records_user_draw_id UserDrawDeliveryRecords? @relation("fk_user_draw_delivery_records_user_draw_id")
+  rev_user_draw_escrows_user_draw_id          UserDrawEscrows?         @relation("fk_user_draw_escrows_user_draw_id")
+  rev_user_draw_invitations_user_draw_id      UserDrawInvitations[]    @relation("fk_user_draw_invitations_user_draw_id")
+  rev_user_draw_numbers_user_draw_id          UserDrawNumbers[]        @relation("fk_user_draw_numbers_user_draw_id")
+  rev_user_draw_participations_user_draw_id   UserDrawParticipations[] @relation("fk_user_draw_participations_user_draw_id")
+  rev_user_draw_prize_evidence_user_draw_id   UserDrawPrizeEvidence[]  @relation("fk_user_draw_prize_evidence_user_draw_id")
+  rev_user_draw_results_user_draw_id          UserDrawResults?         @relation("fk_user_draw_results_user_draw_id")
+  rev_user_draw_snapshots_user_draw_id        UserDrawSnapshots?       @relation("fk_user_draw_snapshots_user_draw_id")
+  rev_user_draw_status_history_user_draw_id   UserDrawStatusHistory[]  @relation("fk_user_draw_status_history_user_draw_id")
+
+  @@index([visibility, status, sales_open_at], map: "ix_user_draws_visibility_status_sales_open_at")
+  @@map("user_draws")
+}
+
+/// Asignación atómica a Vendedor.
+model ConversionAssignments {
+  id                        String                     @id @db.Uuid
+  conversion_request_id     String                     @db.Uuid
+  vendor_user_id            String                     @db.Uuid
+  status                    ConversionAssignmentStatus
+  assigned_at               DateTime                   @db.Timestamptz(6)
+  released_at               DateTime?                  @db.Timestamptz(6)
+  consumed_at               DateTime?                  @db.Timestamptz(6)
+  created_at                DateTime                   @default(now()) @db.Timestamptz(6)
+  rel_conversion_request_id ConversionRequests         @relation("fk_conversion_assignments_conversion_request_id", fields: [conversion_request_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_vendor_user_id        Users                      @relation("fk_conversion_assignments_vendor_user_id", fields: [vendor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([vendor_user_id, status], map: "ix_conversion_assignments_vendor_user_id_status")
+  @@map("conversion_assignments")
+}
+
+/// Historial de estados de solicitud.
+model ConversionRequestEvents {
+  id                        String                   @id @db.Uuid
+  conversion_request_id     String                   @db.Uuid
+  from_status               ConversionRequestStatus?
+  to_status                 ConversionRequestStatus
+  transition_code           String                   @db.VarChar(80)
+  actor_type                ActorType
+  actor_user_id             String?                  @db.Uuid
+  reason_code               String?                  @db.VarChar(80)
+  correlation_id            String                   @db.Uuid
+  occurred_at               DateTime                 @db.Timestamptz(6)
+  created_at                DateTime                 @default(now()) @db.Timestamptz(6)
+  rel_conversion_request_id ConversionRequests       @relation("fk_conversion_request_events_conversion_request_id", fields: [conversion_request_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_actor_user_id         Users?                   @relation("fk_conversion_request_events_actor_user_id", fields: [actor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([conversion_request_id, occurred_at], map: "ix_conversion_request_events_conversion_request_id_occurred_at")
+  @@map("conversion_request_events")
+}
+
+/// Solicitud REAL→VIRTUAL con reserva y fallback.
+model ConversionRequests {
+  id                                                  String                    @id @db.Uuid
+  client_user_id                                      String                    @db.Uuid
+  amount_real_minor                                   BigInt
+  amount_virtual_minor                                BigInt
+  status                                              ConversionRequestStatus
+  expires_at                                          DateTime                  @db.Timestamptz(6)
+  real_reservation_ledger_transaction_id              String                    @unique @db.Uuid
+  completion_ledger_transaction_id                    String?                   @unique @db.Uuid
+  completed_by_vendor_user_id                         String?                   @db.Uuid
+  completed_at                                        DateTime?                 @db.Timestamptz(6)
+  idempotency_key_id                                  String                    @db.Uuid
+  created_at                                          DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at                                          DateTime                  @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_client_user_id                                  Users                     @relation("fk_conversion_requests_client_user_id", fields: [client_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_real_reservation_ledger_transaction_id          LedgerTransactions        @relation("fk_conversion_requests_real_reservation_ledger_transaction_id", fields: [real_reservation_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_completion_ledger_transaction_id                LedgerTransactions?       @relation("fk_conversion_requests_completion_ledger_transaction_id", fields: [completion_ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_completed_by_vendor_user_id                     Users?                    @relation("fk_conversion_requests_completed_by_vendor_user_id", fields: [completed_by_vendor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_idempotency_key_id                              IdempotencyKeys           @relation("fk_conversion_requests_idempotency_key_id", fields: [idempotency_key_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_conversion_assignments_conversion_request_id    ConversionAssignments[]   @relation("fk_conversion_assignments_conversion_request_id")
+  rev_conversion_request_events_conversion_request_id ConversionRequestEvents[] @relation("fk_conversion_request_events_conversion_request_id")
+  rev_vendor_sales_conversion_request_id              VendorSales?              @relation("fk_vendor_sales_conversion_request_id")
+
+  @@index([status, expires_at], map: "ix_conversion_requests_status_expires_at")
+  @@index([client_user_id, created_at], map: "ix_conversion_requests_client_user_id_created_at")
+  @@map("conversion_requests")
+}
+
+/// Vínculos y alertas antifraude.
+model RelatedAccountFlags {
+  id                      String         @id @db.Uuid
+  user_a_id               String         @db.Uuid
+  user_b_id               String         @db.Uuid
+  flag_type               String         @db.VarChar(80)
+  status                  RiskFlagStatus
+  risk_score              Int?
+  evidence                Json?          @db.JsonB
+  detected_at             DateTime       @db.Timestamptz(6)
+  resolved_by_user_id     String?        @db.Uuid
+  resolved_at             DateTime?      @db.Timestamptz(6)
+  created_at              DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_a_id           Users          @relation("fk_related_account_flags_user_a_id", fields: [user_a_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_user_b_id           Users          @relation("fk_related_account_flags_user_b_id", fields: [user_b_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_resolved_by_user_id Users?         @relation("fk_related_account_flags_resolved_by_user_id", fields: [resolved_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([user_a_id, user_b_id, flag_type], map: "uq_related_account_flags_normalized")
+  @@index([user_a_id, status], map: "ix_related_account_flags_user_a_id_status")
+  @@index([user_b_id, status], map: "ix_related_account_flags_user_b_id_status")
+  @@map("related_account_flags")
+}
+
+/// Lotes VIRTUAL con coste histórico.
+model VendorInventoryBatches {
+  id                                                   String                       @id @db.Uuid
+  vendor_user_id                                       String                       @db.Uuid
+  purchase_order_id                                    String                       @unique @db.Uuid
+  virtual_acquired_minor                               BigInt
+  virtual_remaining_minor                              BigInt
+  real_cost_minor                                      BigInt
+  status                                               InventoryBatchStatus
+  acquired_at                                          DateTime                     @db.Timestamptz(6)
+  created_at                                           DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                                           DateTime                     @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_vendor_user_id                                   Users                        @relation("fk_vendor_inventory_batches_vendor_user_id", fields: [vendor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_purchase_order_id                                VendorPurchaseOrders         @relation("fk_vendor_inventory_batches_purchase_order_id", fields: [purchase_order_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_vendor_sale_batch_allocations_inventory_batch_id VendorSaleBatchAllocations[] @relation("fk_vendor_sale_batch_allocations_inventory_batch_id")
+
+  @@index([vendor_user_id, status, acquired_at], map: "ix_vendor_inventory_batches_vendor_user_id_status_acquired_at")
+  @@map("vendor_inventory_batches")
+}
+
+/// Estado y habilitación del Vendedor.
+model VendorProfiles {
+  id                      String              @id @db.Uuid
+  user_id                 String              @unique @db.Uuid
+  status                  VendorProfileStatus
+  approved_by_user_id     String?             @db.Uuid
+  approved_at             DateTime?           @db.Timestamptz(6)
+  suspended_at            DateTime?           @db.Timestamptz(6)
+  suspension_reason       String?             @db.Text
+  created_at              DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_user_id             Users               @relation("fk_vendor_profiles_user_id", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_approved_by_user_id Users?              @relation("fk_vendor_profiles_approved_by_user_id", fields: [approved_by_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("vendor_profiles")
+}
+
+/// Compra mayorista 0,90 REAL→1,00 VIRTUAL.
+model VendorPurchaseOrders {
+  id                                             String                  @id @db.Uuid
+  vendor_user_id                                 String                  @db.Uuid
+  requested_virtual_minor                        BigInt
+  real_cost_minor                                BigInt
+  unit_cost_numerator                            Int
+  unit_cost_denominator                          Int
+  status                                         VendorOrderStatus
+  ledger_transaction_id                          String?                 @unique @db.Uuid
+  idempotency_key_id                             String                  @db.Uuid
+  confirmed_at                                   DateTime?               @db.Timestamptz(6)
+  created_at                                     DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime                @default(now()) @updatedAt @db.Timestamptz(6)
+  rel_vendor_user_id                             Users                   @relation("fk_vendor_purchase_orders_vendor_user_id", fields: [vendor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_ledger_transaction_id                      LedgerTransactions?     @relation("fk_vendor_purchase_orders_ledger_transaction_id", fields: [ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_idempotency_key_id                         IdempotencyKeys         @relation("fk_vendor_purchase_orders_idempotency_key_id", fields: [idempotency_key_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_vendor_inventory_batches_purchase_order_id VendorInventoryBatches? @relation("fk_vendor_inventory_batches_purchase_order_id")
+
+  @@map("vendor_purchase_orders")
+}
+
+/// Consumo de lotes para coste y ganancia realizada.
+model VendorSaleBatchAllocations {
+  id                        String                 @id @db.Uuid
+  vendor_sale_id            String                 @db.Uuid
+  inventory_batch_id        String                 @db.Uuid
+  virtual_amount_minor      BigInt
+  allocated_real_cost_minor BigInt
+  created_at                DateTime               @default(now()) @db.Timestamptz(6)
+  rel_vendor_sale_id        VendorSales            @relation("fk_vendor_sale_batch_allocations_vendor_sale_id", fields: [vendor_sale_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_inventory_batch_id    VendorInventoryBatches @relation("fk_vendor_sale_batch_allocations_inventory_batch_id", fields: [inventory_batch_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([vendor_sale_id, inventory_batch_id], map: "uq_vendor_sale_batch_allocations_vendor_sale_id_inve_5795c3a96b")
+  @@map("vendor_sale_batch_allocations")
+}
+
+/// Venta realizada y ganancia verificable.
+model VendorSales {
+  id                                               String                       @id @db.Uuid
+  conversion_request_id                            String                       @unique @db.Uuid
+  vendor_user_id                                   String                       @db.Uuid
+  virtual_sold_minor                               BigInt
+  real_received_minor                              BigInt
+  allocated_real_cost_minor                        BigInt
+  realized_profit_minor                            BigInt
+  ledger_transaction_id                            String                       @unique @db.Uuid
+  sold_at                                          DateTime                     @db.Timestamptz(6)
+  created_at                                       DateTime                     @default(now()) @db.Timestamptz(6)
+  rel_conversion_request_id                        ConversionRequests           @relation("fk_vendor_sales_conversion_request_id", fields: [conversion_request_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_vendor_user_id                               Users                        @relation("fk_vendor_sales_vendor_user_id", fields: [vendor_user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rel_ledger_transaction_id                        LedgerTransactions           @relation("fk_vendor_sales_ledger_transaction_id", fields: [ledger_transaction_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rev_vendor_sale_batch_allocations_vendor_sale_id VendorSaleBatchAllocations[] @relation("fk_vendor_sale_batch_allocations_vendor_sale_id")
+
+  @@index([vendor_user_id, sold_at], map: "ix_vendor_sales_vendor_user_id_sold_at")
+  @@map("vendor_sales")
 }
