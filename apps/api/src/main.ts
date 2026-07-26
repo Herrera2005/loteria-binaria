@@ -5,11 +5,15 @@ import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   });
+  const correlationIdMiddleware = app.get(CorrelationIdMiddleware);
+
+  app.use(correlationIdMiddleware.use.bind(correlationIdMiddleware));
 
   const configService = app.get(ConfigService);
 

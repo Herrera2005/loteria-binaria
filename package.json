@@ -29,6 +29,9 @@
     "db:validate": "prisma validate",
     "db:generate": "prisma generate",
     "db:status": "prisma migrate status",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:validate": "prisma validate --schema=prisma/schema.prisma",
+    "db:generate": "prisma generate --schema=prisma/schema.prisma",
+    "db:studio": "prisma studio --config=./prisma.config.ts"
   }
 }

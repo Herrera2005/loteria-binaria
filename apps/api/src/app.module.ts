@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
@@ -38,8 +38,4 @@ import { HealthModule } from './modules/health/health.module';
 
   providers: [RequestContextService, CorrelationIdMiddleware],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
-  }
-}
+export class AppModule {}
