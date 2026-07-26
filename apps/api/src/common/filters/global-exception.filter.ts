@@ -12,7 +12,7 @@ import { ERROR_CODES } from '../errors/error-codes';
 import type { RequestWithCorrelationId } from '../types/request-with-correlation-id';
 
 interface NormalizedError {
-  statusCode: number;
+  statusCode: HttpStatus;
   code: string;
   message: string;
   details: unknown;
@@ -51,7 +51,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       path: request.originalUrl ?? request.url,
     });
 
-    if (error.statusCode >= 500) {
+    if (error.statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error(
         logData,
         exception instanceof Error ? exception.stack : undefined,
@@ -100,7 +100,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     };
   }
 
-  private mapStatusCode(statusCode: number): string {
+  private mapStatusCode(statusCode: HttpStatus): string {
     switch (statusCode) {
       case HttpStatus.BAD_REQUEST:
         return ERROR_CODES.VALIDATION_ERROR;
@@ -115,13 +115,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       case HttpStatus.SERVICE_UNAVAILABLE:
         return ERROR_CODES.SERVICE_UNAVAILABLE;
       default:
-        return statusCode >= 500
+        return statusCode >= HttpStatus.INTERNAL_SERVER_ERROR
           ? ERROR_CODES.INTERNAL_SERVER_ERROR
           : `HTTP_${statusCode}`;
     }
   }
 
-  private getPublicMessage(statusCode: number): string {
+  private getPublicMessage(statusCode: HttpStatus): string {
     switch (statusCode) {
       case HttpStatus.BAD_REQUEST:
         return 'La solicitud contiene datos inválidos.';
@@ -136,7 +136,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       case HttpStatus.SERVICE_UNAVAILABLE:
         return 'El servicio no está disponible temporalmente.';
       default:
-        return statusCode >= 500
+        return statusCode >= HttpStatus.INTERNAL_SERVER_ERROR
           ? 'Se produjo un error interno.'
           : 'La solicitud no pudo completarse.';
     }
