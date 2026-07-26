@@ -29,3 +29,9 @@ Thumbs.db
 # Configuración local de asistentes
 .claude/
 .windsurf/
+
+# Turbo
+.turbo/
+
+# Copias temporales
+*.backup
