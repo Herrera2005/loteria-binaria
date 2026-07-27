@@ -11,14 +11,9 @@ async function bootstrap(): Promise<void> {
     bufferLogs: true,
   });
 
-  const correlationIdMiddleware =
-    app.get(CorrelationIdMiddleware);
+  const correlationIdMiddleware = app.get(CorrelationIdMiddleware);
 
-  app.use(
-    correlationIdMiddleware.use.bind(
-      correlationIdMiddleware,
-    ),
-  );
+  app.use(correlationIdMiddleware.use.bind(correlationIdMiddleware));
 
   const configService = app.get(ConfigService);
 
