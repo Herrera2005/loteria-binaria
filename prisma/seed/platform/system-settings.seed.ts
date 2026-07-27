@@ -9,10 +9,10 @@ interface SystemSettingDefinition {
   settingKey: string;
   valueJson: Prisma.InputJsonValue;
   valueType:
-    | "integer"
-    | "boolean"
-    | "string"
-    | "object";
+  | "integer"
+  | "boolean"
+  | "string"
+  | "object";
   isSensitive: boolean;
   description: string;
 }
@@ -118,44 +118,53 @@ export async function seedSystemSettings(
     const definition
     of SYSTEM_SETTING_DEFINITIONS
   ) {
-    await prisma.systemSettings.upsert({
-      where: {
-        setting_key:
-          definition.settingKey,
-      },
+    const existing =
+      await prisma.systemSettings.findUnique({
+        where: {
+          setting_key:
+            definition.settingKey,
+        },
+      });
 
-      create: {
-        id: generateUuidV7(),
-        setting_key:
-          definition.settingKey,
-        value_json:
-          definition.valueJson,
-        value_type:
-          definition.valueType,
-        is_sensitive:
-          definition.isSensitive,
-        updated_by_user_id: null,
-        description:
-          definition.description,
-      },
+    if (!existing) {
+      await prisma.systemSettings.create({
+        data: {
+          id: generateUuidV7(),
+          setting_key:
+            definition.settingKey,
+          value_json:
+            definition.valueJson,
+          value_type:
+            definition.valueType,
+          is_sensitive:
+            definition.isSensitive,
+          updated_by_user_id: null,
+          description:
+            definition.description,
+        },
+      });
 
-      update: {
-        value_json:
-          definition.valueJson,
-        value_type:
-          definition.valueType,
-        is_sensitive:
-          definition.isSensitive,
-        description:
-          definition.description,
+      continue;
+    }
 
-        /*
-         * Sigue en null porque esta sincronización
-         * la ejecuta el sistema, no un administrador.
-         */
-        updated_by_user_id: null,
-      },
-    });
+    if (
+      existing.value_type !==
+      definition.valueType
+    ) {
+      throw new Error(
+        `La configuración ${definition.settingKey} tiene value_type incorrecto.`,
+      );
+    }
+
+    if (
+      existing.is_sensitive !==
+      definition.isSensitive
+    ) {
+      throw new Error(
+        `La configuración ${definition.settingKey} tiene is_sensitive incorrecto.`,
+      );
+    }
+
   }
 
   console.info(

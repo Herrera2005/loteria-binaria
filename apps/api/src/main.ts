@@ -2,18 +2,23 @@ import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   });
-  const correlationIdMiddleware = app.get(CorrelationIdMiddleware);
 
-  app.use(correlationIdMiddleware.use.bind(correlationIdMiddleware));
+  const correlationIdMiddleware =
+    app.get(CorrelationIdMiddleware);
+
+  app.use(
+    correlationIdMiddleware.use.bind(
+      correlationIdMiddleware,
+    ),
+  );
 
   const configService = app.get(ConfigService);
 

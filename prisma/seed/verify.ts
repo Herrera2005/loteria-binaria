@@ -498,6 +498,17 @@ async function verifyDemoUsers(): Promise<void> {
 }
 
 async function verifyNoSeededMoney(): Promise<void> {
+  if (
+    process.env.VERIFY_FRESH_DATABASE !==
+    "true"
+  ) {
+    console.info(
+      "[verify] Comprobación de dinero omitida: la base no fue declarada como nueva.",
+    );
+
+    return;
+  }
+
   const transactionCount =
     await prisma.ledgerTransactions.count();
 
@@ -506,16 +517,16 @@ async function verifyNoSeededMoney(): Promise<void> {
 
   assertCondition(
     transactionCount === 0,
-    `El seed creó ${transactionCount} transacciones contables.`,
+    `La base nueva contiene ${transactionCount} transacciones contables.`,
   );
 
   assertCondition(
     entryCount === 0,
-    `El seed creó ${entryCount} asientos contables.`,
+    `La base nueva contiene ${entryCount} asientos contables.`,
   );
 
   console.info(
-    "[verify] El seed no creó dinero ni movimientos.",
+    "[verify] La base nueva no contiene dinero ni movimientos.",
   );
 }
 
