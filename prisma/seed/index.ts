@@ -8,17 +8,18 @@ import { seedRuleVersions } from "./catalogs/rule-versions.seed";
 import {
   seedTermsVersions,
 } from "./catalogs/terms-versions.seed";
-
 import {
   seedSystemSettings,
 } from "./platform/system-settings.seed";
 import {
   seedLedgerAccounts,
 } from "./platform/ledger-accounts.seed";
-
 import {
   seedFunds,
 } from "./platform/funds.seed";
+import {
+  seedDemoUsers,
+} from "./demo/users.seed";
 
 async function main(): Promise<void> {
   console.info("[seed] Iniciando seed...");
@@ -56,6 +57,11 @@ async function main(): Promise<void> {
     prisma,
     products,
     platformAccounts,
+  );
+
+  await seedDemoUsers(
+    prisma,
+    roles,
   );
 
   console.info(
