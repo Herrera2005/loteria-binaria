@@ -1,0 +1,22 @@
+{
+  "extends": "../tsconfig/library.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "rootDir": "src",
+    "outDir": ".test-dist",
+    "tsBuildInfoFile": ".test-dist/.tsbuildinfo",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "dist",
+    ".test-dist"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "@loteria-binaria/tsconfig",
+  "version": "0.1.0",
+  "private": true,
+  "files": [
+    "base.json",
+    "library.json",
+    "node.json"
+  ],
+  "exports": {
+    "./base.json": "./base.json",
+    "./library.json": "./library.json",
+    "./node.json": "./node.json"
+  }
+}

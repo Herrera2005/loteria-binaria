@@ -12,7 +12,7 @@
     "dotenv": "^17.4.2",
     "prisma": "^7.9.0",
     "turbo": "^2.10.7",
-    "typescript": "^7.0.2"
+    "typescript": "6.0.3"
   },
   "scripts": {
     "dev": "turbo run dev --filter=web --filter=api --filter=worker",
@@ -29,9 +29,6 @@
     "db:validate": "prisma validate",
     "db:generate": "prisma generate",
     "db:status": "prisma migrate status",
-    "db:studio": "prisma studio",
-    "db:validate": "prisma validate --schema=prisma/schema.prisma",
-    "db:generate": "prisma generate --schema=prisma/schema.prisma",
-    "db:studio": "prisma studio --config=./prisma.config.ts"
+    "db:studio": "prisma studio"
   }
 }

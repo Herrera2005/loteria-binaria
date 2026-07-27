@@ -1,0 +1,38 @@
+{
+  "name": "@loteria-binaria/game-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "Matemática pura de combinaciones y reglas de juego.",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true});require('node:fs').rmSync('.test-dist',{recursive:true,force:true})\"",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.test.json --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "node scripts/test.mjs"
+  },
+  "devDependencies": {
+    "@loteria-binaria/eslint-config": "workspace:*",
+    "@types/node": "^24.0.0",
+    "eslint": "^9.18.0",
+    "typescript": "^5.7.3",
+    "@loteria-binaria/tsconfig": "workspace:*"
+  },
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=24.18.0"
+  }
+}
