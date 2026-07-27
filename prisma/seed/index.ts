@@ -5,7 +5,13 @@ import { seedProducts } from "./catalogs/products.seed";
 import { seedRolePermissions } from "./catalogs/role-permissions.seed";
 import { seedRoles } from "./catalogs/roles.seed";
 import { seedRuleVersions } from "./catalogs/rule-versions.seed";
+import {
+  seedTermsVersions,
+} from "./catalogs/terms-versions.seed";
 
+import {
+  seedSystemSettings,
+} from "./platform/system-settings.seed";
 import {
   seedLedgerAccounts,
 } from "./platform/ledger-accounts.seed";
@@ -35,6 +41,10 @@ async function main(): Promise<void> {
     prisma,
     products,
   );
+
+  await seedTermsVersions(prisma);
+
+  await seedSystemSettings(prisma);
 
   const platformAccounts =
     await seedLedgerAccounts(
