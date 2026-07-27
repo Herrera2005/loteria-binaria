@@ -36,6 +36,7 @@
     "db:status": "prisma migrate status",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
-    "db:seed:verify": "tsx prisma/seed/verify.ts"
+    "db:seed:verify": "tsx prisma/seed/verify.ts",
+    "db:seed:permissions:generate": "tsx scripts/generate-permission-catalog.ts"
   }
 }
