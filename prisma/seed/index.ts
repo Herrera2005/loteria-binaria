@@ -1,8 +1,10 @@
 import { prisma } from "./client";
 
-import { seedRoles } from "./catalogs/roles.seed";
 import { seedPermissions } from "./catalogs/permissions.seed";
+import { seedProducts } from "./catalogs/products.seed";
 import { seedRolePermissions } from "./catalogs/role-permissions.seed";
+import { seedRoles } from "./catalogs/roles.seed";
+import { seedRuleVersions } from "./catalogs/rule-versions.seed";
 
 async function main(): Promise<void> {
   console.info("[seed] Iniciando seed...");
@@ -16,6 +18,14 @@ async function main(): Promise<void> {
     prisma,
     roles,
     permissions,
+  );
+
+  const products =
+    await seedProducts(prisma);
+
+  await seedRuleVersions(
+    prisma,
+    products,
   );
 
   console.info(
