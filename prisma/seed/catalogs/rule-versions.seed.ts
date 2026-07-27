@@ -5,16 +5,13 @@ import {
   type PrismaClient,
 } from "../../../apps/api/src/generated/prisma/client";
 import type { ProductCode } from "./products.seed";
-
+import { BASELINE_SEED_DATE } from "../constants";
 import { createCanonicalHash } from "../helpers/canonical-hash";
 import { generateUuidV7 } from "../helpers/generate-uuid-v7";
 
 type ProductRecord = {
   id: string;
 };
-
-const BASELINE_PUBLISHED_AT =
-  new Date("2026-07-26T00:00:00.000Z");
 
 const RULE_DEFINITIONS = {
   OCTAL: {
@@ -165,7 +162,7 @@ export async function seedRuleVersions(
       reservation_seconds: 300,
       close_before_draw_seconds: 600,
 
-      published_at: BASELINE_PUBLISHED_AT,
+      published_at: BASELINE_SEED_DATE,
     } satisfies Omit<
       Prisma.RuleVersionsUncheckedCreateInput,
       | "id"
@@ -177,7 +174,7 @@ export async function seedRuleVersions(
       createCanonicalHash({
         ...mathematicalPayload,
         published_at:
-          BASELINE_PUBLISHED_AT.toISOString(),
+          BASELINE_SEED_DATE.toISOString(),
       });
 
     const existingRule =
@@ -264,7 +261,7 @@ export async function seedRuleVersions(
         PRIZE_RULE_DEFINITION
           .allocationPolicyCode,
 
-      published_at: BASELINE_PUBLISHED_AT,
+      published_at: BASELINE_SEED_DATE,
     } satisfies Omit<
       Prisma.PrizeRuleVersionsUncheckedCreateInput,
       | "id"
@@ -276,7 +273,7 @@ export async function seedRuleVersions(
       createCanonicalHash({
         ...prizePayload,
         published_at:
-          BASELINE_PUBLISHED_AT.toISOString(),
+          BASELINE_SEED_DATE.toISOString(),
       });
 
     const existingPrizeRule =
