@@ -24,15 +24,19 @@
   },
   "devDependencies": {
     "@loteria-binaria/eslint-config": "workspace:*",
+    "@loteria-binaria/tsconfig": "workspace:*",
     "@types/node": "^24.0.0",
+    "@types/pg": "^8.20.0",
     "eslint": "^9.18.0",
-    "typescript": "^5.7.3",
-    "@loteria-binaria/tsconfig": "workspace:*"
+    "typescript": "^5.7.3"
   },
   "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "engines": {
     "node": ">=24.18.0"
+  },
+  "dependencies": {
+    "pg": "^8.22.0"
   }
 }

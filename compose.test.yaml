@@ -1,0 +1,31 @@
+name: loteria-binaria-test
+
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: lb-postgres-test
+    restart: "no"
+
+    environment:
+      POSTGRES_DB: ${TEST_POSTGRES_DB:-loteria_binaria_test}
+      POSTGRES_USER: ${TEST_POSTGRES_USER:-loteria_binaria_test}
+      POSTGRES_PASSWORD: ${TEST_POSTGRES_PASSWORD:-loteria_binaria_test_local_password}
+
+    ports:
+      - "127.0.0.1:${TEST_POSTGRES_PORT:-5434}:5432"
+
+    # La información desaparece al destruir el contenedor.
+    # No se comparte con la base de desarrollo.
+    tmpfs:
+      - /var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+      start_period: 5s

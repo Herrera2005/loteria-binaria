@@ -40,6 +40,10 @@
     "db:seed:permissions:generate": "tsx scripts/generate-permission-catalog.ts",
     "local:doctor": "bash scripts/doctor-local.sh",
     "local:start": "bash scripts/dev-local.sh",
-    "local:stop": "bash scripts/stop-local.sh"
+    "local:stop": "bash scripts/stop-local.sh",
+    "test:db:start": "docker compose --env-file .env.test -f compose.test.yaml up -d --wait",
+    "test:db:stop": "docker compose --env-file .env.test -f compose.test.yaml down --remove-orphans",
+    "test:pg": "bash scripts/test-postgres.sh",
+    "test:db:migrate": "bash scripts/testing/apply-test-migrations.sh"
   }
 }
