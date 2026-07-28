@@ -22,12 +22,27 @@ export const TEST_IDS = {
     virtualAvailableA: '00000000-0000-4000-8000-000000000302',
     virtualAvailableB: '00000000-0000-4000-8000-000000000303',
     platformVirtual: '00000000-0000-4000-8000-000000000304',
+    immutabilityDebit: '00000000-0000-4000-8000-000000000305',
+    immutabilityCredit: '00000000-0000-4000-8000-000000000306',
   },
 
   ledgerTransactions: {
     initialCredit: '00000000-0000-4000-8000-000000000401',
     concurrentDebitA: '00000000-0000-4000-8000-000000000402',
     concurrentDebitB: '00000000-0000-4000-8000-000000000403',
+    immutabilityOriginal: '00000000-0000-4000-8000-000000000404',
+    immutabilityReversal: '00000000-0000-4000-8000-000000000405',
+  },
+
+  ledgerEntries: {
+    immutabilityOriginalDebit:
+      '00000000-0000-4000-8000-000000000501',
+    immutabilityOriginalCredit:
+      '00000000-0000-4000-8000-000000000502',
+    immutabilityReversalDebit:
+      '00000000-0000-4000-8000-000000000503',
+    immutabilityReversalCredit:
+      '00000000-0000-4000-8000-000000000504',
   },
 } as const;
 

@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "dev": "nest start --watch",
     "typecheck": "tsc --noEmit",
+    "typecheck:test": "tsc -p ./test/tsconfig.json --noEmit",
     "test:pg": "jest --config ./test/jest-postgres.json --runInBand"
   },
   "dependencies": {

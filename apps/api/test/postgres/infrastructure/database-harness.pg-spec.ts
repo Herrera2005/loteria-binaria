@@ -22,9 +22,7 @@ describe('PostgreSQL isolated database harness', () => {
     }>('SELECT current_database()');
 
     expect(result.rows).toHaveLength(1);
-    expect(result.rows[0]?.current_database).toBe(
-      database.name,
-    );
+    expect(result.rows[0]?.current_database).toBe(database.name);
 
     expect(database.name).toMatch(/^lb_test_/u);
   });
@@ -41,9 +39,7 @@ describe('PostgreSQL isolated database harness', () => {
       `,
     );
 
-    expect(BigInt(result.rows[0]?.migration_count ?? '0')).toBeGreaterThan(
-      0n,
-    );
+    expect(BigInt(result.rows[0]?.migration_count ?? '0')).toBeGreaterThan(0n);
   });
 
   it('puede abrir dos conexiones independientes', async () => {
@@ -55,10 +51,7 @@ describe('PostgreSQL isolated database harness', () => {
       application_name: 'database-harness-b',
     });
 
-    await Promise.all([
-      clientA.connect(),
-      clientB.connect(),
-    ]);
+    await Promise.all([clientA.connect(), clientB.connect()]);
 
     try {
       const [resultA, resultB] = await Promise.all([
@@ -74,10 +67,7 @@ describe('PostgreSQL isolated database harness', () => {
         resultB.rows[0]?.backend_pid,
       );
     } finally {
-      await Promise.allSettled([
-        clientA.end(),
-        clientB.end(),
-      ]);
+      await Promise.allSettled([clientA.end(), clientB.end()]);
     }
   });
 });
