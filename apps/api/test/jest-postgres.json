@@ -12,5 +12,6 @@
   "maxWorkers": 1,
   "detectOpenHandles": true,
   "clearMocks": true,
-  "restoreMocks": true
+  "restoreMocks": true,
+  "verbose": true
 }
