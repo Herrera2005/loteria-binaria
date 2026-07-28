@@ -37,6 +37,9 @@
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
     "db:seed:verify": "tsx prisma/seed/verify.ts",
-    "db:seed:permissions:generate": "tsx scripts/generate-permission-catalog.ts"
+    "db:seed:permissions:generate": "tsx scripts/generate-permission-catalog.ts",
+    "local:doctor": "bash scripts/doctor-local.sh",
+    "local:start": "bash scripts/dev-local.sh",
+    "local:stop": "bash scripts/stop-local.sh"
   }
 }
